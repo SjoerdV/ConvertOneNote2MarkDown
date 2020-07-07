@@ -40,6 +40,8 @@ The powershell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 
 * Microsoft OneNote >= 2016
 
+* Microsoft Word >= 2016
+
 * PanDoc >= 2.7.2
 
   * TIP: Use [Chocolatey](https://chocolatey.org/docs/installation#install-with-powershellexe) to install this on Windows, this will also set the right path (environment) statements

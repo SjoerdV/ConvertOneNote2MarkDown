@@ -6,6 +6,7 @@ date: 2019-05-19 22:35:00
 keywords: [migration, tooling, onenote, markdown, powershell]
 abstract: |
   This document is about converting your OneNote data to Markdown format.
+permalink: /index.html
 ---
 # Convert OneNote to MarkDown
 

@@ -3,6 +3,7 @@ title:  'Convert OneNote to MarkDown'
 author:
 - Sjoerd de Valk, SPdeValk Consultancy
 date: 2019-05-19 22:35:00
+last_modified_at: 2020-07-08T00:41:58+02:00
 keywords: [migration, tooling, onenote, markdown, powershell]
 abstract: |
   This document is about converting your OneNote data to Markdown format.
@@ -29,6 +30,8 @@ The powershell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 1. Password protected sections should be unlocked before continuing, the Object Model does not have access to them if you don't
 1. Section Groups are listed but do not contain actual data, so these are ignored
 1. You should start by 'flattening' all pen/hand written elements in your onennote pages. Because OneNote does not have this function you will have to take screenshots of your pages with pen/hand written notes and paste the resulting image and then remove the scriblings. If you are a heavy 'pen' user this is a very cumbersome. **If you have an automated solution for this, please let me know**
+1. Relative paths can not be used as input for the target folder. Always use an absolute path (ex. 'c:\temp\notes').
+1. This script uses only absolute paths internally, mainly because pandoc on Windows has trouble processing relative paths and for consistency. This will not be changed.
 1. While running the conversion OneNote will be unusable and it is recommended to 'walk away' and have some coffee as the Object Model might be interrupted if you do anything else.
 1. Linked file object in .md files are clickable in VSCode, but do not open in their associated program, you will have to open the files directly from the file system.
 1. Anything I did not catch... please submit an issue.
@@ -61,6 +64,9 @@ Clone this repository to acquire the powershell script.
     ```
 
 1. It will ask you for the path to store the markdown folder structure. Please use an empty folder.
+
+    **Attention:** use a full absolute path for the destination
+
 1. Sit back and wait until the process completes
 
 ## Results

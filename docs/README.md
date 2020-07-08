@@ -28,7 +28,8 @@ The powershell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 ## Known Issues
 
 1. Password protected sections should be unlocked before continuing, the Object Model does not have access to them if you don't
-1. Section Groups are listed but do not contain actual data, so these are ignored
+1. Section Groups on the first level are listed but are ignored. Nested Section Groups are not processed at all.
+    * Recommendation: if you make heavy use of (Nested) Section Groups you first have to reorganize in a way that they are out of the picture. Usually creating a new Notebook named the same as your Section Group and moving all relevant Sections.
 1. You should start by 'flattening' all pen/hand written elements in your onennote pages. Because OneNote does not have this function you will have to take screenshots of your pages with pen/hand written notes and paste the resulting image and then remove the scriblings. If you are a heavy 'pen' user this is a very cumbersome. **If you have an automated solution for this, please let me know**
 1. Relative paths can not be used as input for the target folder. Always use an absolute path (ex. 'c:\temp\notes').
 1. This script uses only absolute paths internally, mainly because pandoc on Windows has trouble processing relative paths and for consistency. This will not be changed.

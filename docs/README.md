@@ -31,7 +31,15 @@ The powershell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 * Extract all **File Objects** to the same folder as where the page is in and fix references in the resulting .md files
 * Cleanup intermediate Word files
 * Script **ConvertOneNote2MarkDownSectionGroups.ps1** will allow you to work with section groups that are at the root/top-level of the notebook. It does not extract any sections that are not in section groups, so just make a dummy group for any top-level sections.
-
+* Can use various markdown formats, but is set to use the Pandoc standard format, which strips any HTML from tables along with other desirable (for me) formatting choices.
+  Just open the file in a text editor, search for "pandoc" to find the line, and change "markdown" to one of the following codes to try the differences:
+   * markdown (Pandoc’s Markdown)
+   * commonmark (CommonMark Markdown)
+   * gfm (GitHub-Flavored Markdown), or the deprecated and less accurate markdown_github; use markdown_github only if you need extensions not supported in gfm.
+   * markdown_mmd (MultiMarkdown)
+   * markdown_phpextra (PHP Markdown Extra)
+   * markdown_strict (original unextended Markdown)
+* See details on these options here: https://pandoc.org/MANUAL.html#options
 ## Known Issues
 
 1. Password protected sections should be unlocked before continuing, the Object Model does not have access to them if you don't

@@ -136,6 +136,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Nothing
 
-## Credits
+### [1.1] - 2020-07-11
+#### Added
+ * two new scripts to allow for Section Groups, as well as Section Groups + Subfolders for Subpages
+ 
+#### Changed
+* Pandoc instead of gfm set as default format
 
+#### Removed
+* Nothing
+ 
+
+## Credits
 * Avi Aryan for the awesome [VSCodeNotebook](https://github.com/aviaryan/VSCodeNotebook) port

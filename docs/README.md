@@ -51,7 +51,9 @@ The powershell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 1. This script uses only absolute paths internally, mainly because pandoc on Windows has trouble processing relative paths and for consistency. This will not be changed.
 1. While running the conversion OneNote will be unusable and it is recommended to 'walk away' and have some coffee as the Object Model might be interrupted if you do anything else.
 1. Linked file object in .md files are clickable in VSCode, but do not open in their associated program, you will have to open the files directly from the file system.
+1. Using the Subfolder (or any) of the scripts creates media folders for each folder. I couldn't figure out how to make one root media folder - feel free to change it if you're able and I'll update the repo.
 1. Anything I did not catch... please submit an issue.
+
 
 ## Requirements
 

@@ -11,7 +11,7 @@ permalink: /index.html
 ---
 [![Github All Releases](https://img.shields.io/github/downloads/SjoerdV/ConvertOneNote2MarkDown/total.svg)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/releases)
 
-## Convert OneNote to MarkDown#
+## Convert OneNote to MarkDown
 
 ### Summary
 

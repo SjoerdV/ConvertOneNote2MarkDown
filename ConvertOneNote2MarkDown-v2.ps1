@@ -93,6 +93,15 @@ Function ProcessSections ($group, $FilePath) {
                 $levelsprefix = "../"*($levelsfromroot)+".."
             }
 
+            # set media location (central media folder at notebook-level or adjacent to .md file) based on initial user prompt
+            if ($medialocation -eq 2) {
+                $mediaPath = $fullexportdirpath
+                $levelsprefix = ""
+            }
+            else {
+                $mediaPath = $NotebookFilePath
+            }
+
             # publish OneNote page to Word
             try {
                 $OneNote.Publish($pageid, $fullexportpath, "pfWord", "")
@@ -105,7 +114,7 @@ Function ProcessSections ($group, $FilePath) {
             # convert Word to Markdown
             # https://gist.github.com/heardk/ded40b72056cee33abb18f3724e0a580
             try {
-                pandoc.exe -f docx -t $converter -i $fullexportpath -o "$($fullfilepathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($NotebookFilePath)"
+                pandoc.exe -f docx -t $converter -i $fullexportpath -o "$($fullfilepathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($mediaPath)"
             }
             catch {
                 Write-Host "Error while converting file '$($page.name)' to md: $($Error[0].ToString())" -ForegroundColor Red
@@ -140,7 +149,7 @@ Function ProcessSections ($group, $FilePath) {
             $timeStamp = (Get-Date -Format o).ToString()
             $timeStamp = $timeStamp.replace(':', '')
             $re = [regex]"\d{4}-\d{2}-\d{2}T"
-            $images = Get-ChildItem -Path "$($NotebookFilePath)/media" -Include "*.png", "*.gif", "*.jpg", "*.jpeg" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch $re }
+            $images = Get-ChildItem -Path "$($mediaPath)/media" -Include "*.png", "*.gif", "*.jpg", "*.jpeg" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch $re }
             foreach ($image in $images) {
                 $newimageName = "$($image.BaseName)_$($timeStamp)$($image.Extension)"
                 # Rename Image
@@ -164,9 +173,9 @@ Function ProcessSections ($group, $FilePath) {
             # change MD file Image Path References
             try {
                 # Change MD file Image Path References in Markdown
-                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($NotebookFilePath.Replace("\","\\"))", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($mediaPath.Replace("\","\\"))", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
                 # Change MD file Image Path References in HTML
-                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($NotebookFilePath)", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($mediaPath)", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
             }
             catch {
                 Write-Host "Error while renaming image file path references for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
@@ -175,7 +184,10 @@ Function ProcessSections ($group, $FilePath) {
 
             # Cleanup Word files
             try {
-                Remove-Item -path "$fullexportpath" -Force -ErrorAction SilentlyContinue
+                if ($keepdocx -ne 2) {
+                    Remove-Item -path "$fullexportpath" -Force -ErrorAction SilentlyContinue
+                }
+                
             }
             catch {
                 Write-Host "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())" -ForegroundColor Red
@@ -184,12 +196,17 @@ Function ProcessSections ($group, $FilePath) {
         }
     }
 }
-
+""
+"-----------------------------------------------"
 # ask for the Notes root path
-$notesdestpath = Read-Host -Prompt "Enter the (preferably empty!) folder path (without trailing backslash!) that will contain your resulting Notes structure. ex. 'c:\temp\notes'"
-
+"Enter the (preferably empty!) folder path (without trailing backslash!) that will contain your resulting Notes structure. ex. 'c:\temp\notes'"
+$notesdestpath = Read-Host -Prompt "Entry"
+""
+"-----------------------------------------------"
 # prompt for prefix vs subfolders
-[Int]$prefixFolders = Read-Host -Prompt "Press 1 to create subfolders for subpages (e.g. Page\Subpage.md ). Press 2 to create prefixes for subpages (Page_Subpage.md). Defaults to 1 on other input."
+"1: Create folders for subpages (e.g. Page\Subpage.md)- Default"
+"2: Add prefixes for subpages (e.g. Page_Subpage.md)"
+[Int]$prefixFolders = Read-Host -Prompt "Entry"
 if ($prefixFolders -eq 2) {
     $prefixFolders = 2 
     $prefixjoiner = "_"
@@ -198,23 +215,34 @@ else {
     $prefixFolders = 1
     $prefixjoiner = "\"
 }
+""
+"-----------------------------------------------"
+"1: Images stored in single 'media' folder at Notebook-level (Default)"
+"2: Separate 'media' folder for each folder in the hierarchy"
+[int] $medialocation = Read-Host -Prompt "Entry"
 
 #prompt for conversion type
+""
 "Select conversion type"
 "-----------------------------------------------"
-"1: markdown (Pandoc)"
+"1: markdown (Pandoc) - Default"
 "2: commonmark (CommonMark Markdown)"
 "3: gfm (GitHub-Flavored Markdown)"
 "4: markdown_mmd (MultiMarkdown)"
 "5: markdown_phpextra (PHP Markdown Extra)"
 "6: markdown_strict (original unextended Markdown)"
-[int]$conversion = Read-Host -Prompt "Select 1-6 (Default 1 on other entry/error): "
+[int]$conversion = Read-Host -Prompt "Entry: "
 if ($conversion -eq 2){ $converter = "commonmark"}
 elseif ($conversion -eq 3){ $converter = "gfm"}
 elseif ($conversion -eq 4){ $converter = "markdown_mmd"}
 elseif ($conversion -eq 5){ $converter = "markdown_phpextra"}
 elseif ($conversion -eq 6){ $converter = "markdown_strict"}
 else { $converter = "markdown"}
+""
+"-----------------------------------------------"
+"1: Discard intermediate .docx files - Default"
+"2: Keep .docx files"
+[int] $keepdocx = Read-Host -Prompt "Entry"
 
 if (Test-Path -Path $notesdestpath) {
     # open OneNote hierarchy
@@ -230,6 +258,8 @@ if (Test-Path -Path $notesdestpath) {
         New-Item -Path "$($notesdestpath)\" -Name "$($notebookFileName)" -ItemType "directory" -ErrorAction SilentlyContinue
         $NotebookFilePath = "$($notesdestpath)\$($notebookFileName)"
         $levelsfromroot = 0
+
+        
         "=============="
         #process any sections that are not in a section group
         ProcessSections $notebook $NotebookFilePath

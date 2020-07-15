@@ -39,7 +39,7 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
 
 1. If there are any collapsed paragraphs in your pages, the collapsed/hidden paragraphs will not be exported
     * You can use the included Onetastic Macro script to automatically expand all paragraphs in each Notebook 
-    * [Download Onetastic here](https://getonetastic.com/download) and, once installed,  double click the macro file to install it within Onetastic
+    * [Download Onetastic here](https://getonetastic.com/download) and, once installed, use New Macro-> File-> Import to install the attached .xml macro file within Onetastic
 1. Password protected sections should be unlocked before continuing, the Object Model does not have access to them if you don't
 1. You should start by 'flattening' all pen/hand written elements in your onennote pages. Because OneNote does not have this function you will have to take screenshots of your pages with pen/hand written notes and paste the resulting image and then remove the scriblings. If you are a heavy 'pen' user this is a very cumbersome. **If you have an automated solution for this, please let me know**
 1. Relative paths can not be used as input for the target folder. Always use an absolute path (ex. 'c:\temp\notes').

@@ -71,8 +71,8 @@ Clone this repository to acquire the powershell script.
 
 1. Start the OneNote application. All notebooks currently loaded in OneNote will be converted
 1. It is advised that you install Onetastic and the attached macro, which will automatically expand any collapsed paragraphs in the notebook. They won't be exported otherwise.
-  * To install the macro, click the New Macro Button within the Onetastic Toolbar and then select File -> Import and select the .xml macro included in the release. 
-  * Run the macro for each Notebook that is open
+    * To install the macro, click the New Macro Button within the Onetastic Toolbar and then select File -> Import and select the .xml macro included in the release. 
+    * Run the macro for each Notebook that is open
 1. Open a PowerShell terminal and navigate to the folder containing the script and run it. 
 
     ```'.\ConvertOneNote2MarkDown-v2.ps1'```

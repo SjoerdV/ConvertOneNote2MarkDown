@@ -3,7 +3,7 @@ title:  'Convert OneNote to MarkDown'
 author:
 - Sjoerd de Valk, SPdeValk Consultancy
 - modified by nixsee, a guy
-date: 2020-07-14 22:35:00
+date: 2020-07-15 13:00:00
 keywords: [migration, tooling, onenote, markdown, powershell]
 abstract: |
   This document is about converting your OneNote data to Markdown format.

@@ -25,7 +25,7 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
 * Extract all **Images** to a central '/media' folder of each notebook and fix references in the resulting .md files, generating *relative* references to the image files within the markdown document
 * Extract all **File Objects** to the same folder as where the page is in and fix references in the resulting .md files
 * Cleanup intermediate Word files
-* Can process top-level section groups, as well as ones in Section Groups, and a 2nd level nested Section Group
+* Can process pages that are in sections at the Notebook, Section Group and 1st Nested Section Group levels
 * User can select which markdown format will be used, defaulting to Pandoc's standard format, which strips any HTML from tables along with other desirable (for me) formatting choices.
    * markdown (Pandoc’s Markdown)
    * commonmark (CommonMark Markdown)
@@ -36,6 +36,8 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
 * See more details on these options here: https://pandoc.org/MANUAL.html#options
 ## Known Issues
 
+1. If there are any collapsed paragraphs in your pages, the collapsed/hidden paragraphs will not be exported
+    * You can use the included Onetastic Macro script to automatically expand all paragraphs in each Notebook - [(download Onetastic here)](https://getonetastic.com/download) and then double click macro file to install it within Onetastic
 1. Password protected sections should be unlocked before continuing, the Object Model does not have access to them if you don't
 1. You should start by 'flattening' all pen/hand written elements in your onennote pages. Because OneNote does not have this function you will have to take screenshots of your pages with pen/hand written notes and paste the resulting image and then remove the scriblings. If you are a heavy 'pen' user this is a very cumbersome. **If you have an automated solution for this, please let me know**
 1. Relative paths can not be used as input for the target folder. Always use an absolute path (ex. 'c:\temp\notes').

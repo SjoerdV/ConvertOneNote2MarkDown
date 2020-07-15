@@ -105,7 +105,7 @@ Function ProcessSections ($group, $FilePath) {
             # convert Word to Markdown
             # https://gist.github.com/heardk/ded40b72056cee33abb18f3724e0a580
             try {
-                pandoc.exe -f docx -t markdown -i $fullexportpath -o "$($fullfilepathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($NotebookFilePath)"
+                pandoc.exe -f docx -t $converter -i $fullexportpath -o "$($fullfilepathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($NotebookFilePath)"
             }
             catch {
                 Write-Host "Error while converting file '$($page.name)' to md: $($Error[0].ToString())" -ForegroundColor Red
@@ -198,6 +198,23 @@ else {
     $prefixFolders = 1
     $prefixjoiner = "\"
 }
+
+#prompt for conversion type
+"Select conversion type"
+"-----------------------------------------------"
+"1: markdown (Pandoc)"
+"2: commonmark (CommonMark Markdown)"
+"3: gfm (GitHub-Flavored Markdown)"
+"4: markdown_mmd (MultiMarkdown)"
+"5: markdown_phpextra (PHP Markdown Extra)"
+"6: markdown_strict (original unextended Markdown)"
+[int]$conversion = Read-Host -Prompt "Select 1-6 (Default 1 on other entry/error): "
+if ($conversion -eq 2){ $converter = "commonmark"}
+elseif ($conversion -eq 3){ $converter = "gfm"}
+elseif ($conversion -eq 4){ $converter = "markdown_mmd"}
+elseif ($conversion -eq 5){ $converter = "markdown_phpextra"}
+elseif ($conversion -eq 6){ $converter = "markdown_strict"}
+else { $converter = "markdown"}
 
 if (Test-Path -Path $notesdestpath) {
     # open OneNote hierarchy

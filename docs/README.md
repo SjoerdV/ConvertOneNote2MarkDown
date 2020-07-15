@@ -112,7 +112,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-### [Unreleased]
+### [2.0] - 2020-07-14
+#### Added
+* Consolidated prior scripts into one
+* Prompt for markdown format selection
+* Prompt to choose between prefix and subfolders for subpages
+
+#### Changed
+* Now produces relative references to images (e.g ../../media
+* Each notebook has a centralized images/media folder
+
+#### Removed
+* Extraneous code
+
+### [1.1] - 2020-07-11
+#### Added
+ * two new scripts to allow for Section Groups, as well as Section Groups + Subfolders for Subpages
+ 
+#### Changed
+* Pandoc instead of gfm set as default format
+
+#### Removed
+* Nothing
 
 ### [1.0.0] - 2019-05-19
 
@@ -128,28 +149,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 * Nothing
 
-### [1.1] - 2020-07-11
-#### Added
- * two new scripts to allow for Section Groups, as well as Section Groups + Subfolders for Subpages
- 
-#### Changed
-* Pandoc instead of gfm set as default format
-
-#### Removed
-* Nothing
-
-### [2.0] - 2020-07-14
-#### Added
-* Consolidated prior scripts into one
-* Prompt for markdown format selection
-* Prompt to choose between prefix and subfolders for subpages
-
-#### Changed
-* Now produces relative references to images (e.g ../../media
-* Each notebook has a centralized images/media folder
-
-#### Removed
-* Extraneous code
 
 ## Credits 
 * Avi Aryan for the awesome [VSCodeNotebook](https://github.com/aviaryan/VSCodeNotebook) port

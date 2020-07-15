@@ -69,8 +69,11 @@ Clone this repository to acquire the powershell script.
 
 ## Usage
 
-1. Start the OneNote application as Administrator. All notebooks currently loaded in OneNote will be converted
-1. Open a PowerShell terminal (as Administrator) and navigate to the folder containing the script and run it (:
+1. Start the OneNote application. All notebooks currently loaded in OneNote will be converted
+1. It is advised that you install Onetastic and the attached macro, which will automatically expand any collapsed paragraphs in the notebook. They won't be exported otherwise.
+  * To install the macro, click the New Macro Button within the Onetastic Toolbar and then select File -> Import and select the .xml macro included in the release. 
+  * Run the macro for each Notebook that is open
+1. Open a PowerShell terminal and navigate to the folder containing the script and run it. 
 
     ```'.\ConvertOneNote2MarkDown-v2.ps1'```
     
@@ -80,9 +83,10 @@ Clone this repository to acquire the powershell script.
 1. It will ask you for the path to store the markdown folder structure. Please use an empty folder.
 
     **Attention:** use a full absolute path for the destination
-1. It will ask you whether you want to create subfolders (1) or append prefixes (2) for subpages.
-
-1. It will ask you which conversion method/markdown format you want: 1-6, defaulting to 1: Pandoc
+1. Select whether you want to create subfolders (1) or append prefixes (2) for subpages.
+1. Select whether you want to store images in central media folder or separate folder for each folder in the hierarchy
+1. Select which conversion method/markdown format you want: 1-6, defaulting to 1: Pandoc
+1. Select whether you want to discard or keep the intermediate .docx files
 
 1. Sit back and wait until the process completes
 

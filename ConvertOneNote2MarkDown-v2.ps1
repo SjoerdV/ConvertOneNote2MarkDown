@@ -145,13 +145,12 @@ Function ProcessSections ($group, $FilePath) {
                 }
             }
 
-            # rename images to have unique timestamp names
-            $timeStamp = (Get-Date -Format o).ToString()
+            # rename images to have unique names - NoteName_Image#_HHmmssff.xyz
+            $timeStamp = (Get-Date -Format HHmmssff).ToString()
             $timeStamp = $timeStamp.replace(':', '')
-            $re = [regex]"\d{4}-\d{2}-\d{2}T"
-            $images = Get-ChildItem -Path "$($mediaPath)/media" -Include "*.png", "*.gif", "*.jpg", "*.jpeg" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name -notmatch $re }
+            $images = Get-ChildItem -Path "$($mediaPath)/media" -Include "*.png", "*.gif", "*.jpg", "*.jpeg" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name.SubString(0,5) -match "image" }
             foreach ($image in $images) {
-                $newimageName = "$($image.BaseName)_$($timeStamp)$($image.Extension)"
+                $newimageName = "$($pagename.SubString(0,[math]::min(30,$pagename.length)))_$($image.BaseName)_$($timeStamp)$($image.Extension)"
                 # Rename Image
                 try {
                     Rename-Item -Path "$($image.FullName)" -NewName $newimageName -ErrorAction SilentlyContinue
@@ -196,6 +195,7 @@ Function ProcessSections ($group, $FilePath) {
         }
     }
 }
+
 ""
 "-----------------------------------------------"
 # ask for the Notes root path

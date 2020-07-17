@@ -4,10 +4,29 @@ Function Remove-InvalidFileNameChars {
         Position = 0,
         ValueFromPipeline = $true,
         ValueFromPipelineByPropertyName = $true)]
-        [String]$Name
+        [string]$Name
     )
+    
+    
     $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
     return (((($newName -replace "\s", "_") -replace "\[", "(") -replace "\]", ")").Substring(0,$(@{$true=130;$false=$newName.length}[$newName.length -gt 130])))
+}
+Function Remove-InvalidFileNameCharsInsertedFiles {
+    param(
+        [Parameter(Mandatory = $true,
+        Position = 0,
+        ValueFromPipeline = $true,
+        ValueFromPipelineByPropertyName = $true)]
+        [string]$Name,
+        [string]$Replacement  = "",
+        [string]$SpecialChars = "#$%^*[]'<>!@{};"
+        
+    )
+
+    $rePattern = ($SpecialChars.ToCharArray() |ForEach-Object { [regex]::Escape($_) }) -join "|"
+
+    $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
+    return ($newName -replace $rePattern,"" -replace "\s","_")
 }
   
 Function ProcessSections ($group, $FilePath) {
@@ -59,7 +78,7 @@ Function ProcessSections ($group, $FilePath) {
                 $pageprefix = ""
                 $previouspagenamelevel1 = $pagename
                 $previouspagenamelevel2 = ""
-                #$previouspagelevel = 1
+                $previouspagelevel = 1
                 "#### " + $page.name
             }
             elseif ($pagelevel -eq 2) {
@@ -69,12 +88,19 @@ Function ProcessSections ($group, $FilePath) {
                     "##### " + $page.name
             }
             elseif ($pagelevel -eq 3) {
-                    $pageprefix = "$($previouspagenamelevel1)$($prefixjoiner)$($previouspagenamelevel2)"
+                    if ($previouspagelevel -eq 2){
+                        $pageprefix = "$($previouspagenamelevel1)$($prefixjoiner)$($previouspagenamelevel2)"
+                    }
+                    # level 3 under level 1, without a level 2
+                    elseif ($previouspagelevel -eq 1) {
+                        $pageprefix = "$($previouspagenamelevel1)$($prefixjoiner)_"
+                    }
+                    #and if previous was 3, do nothing/keep previous label
                     $previouspagelevel = 3
                     "####### " + $page.name
             }
             
-            #if level 2 or 2 (has pageprefix)
+            #if level 2 or 3 (i.e. has a non-blank pageprefix)
             if ($pageprefix) {
                 #create filename prefixes and filepath if prefixes selected
                 if ($prefixFolders -eq 2) {
@@ -114,22 +140,24 @@ Function ProcessSections ($group, $FilePath) {
             # convert Word to Markdown
             # https://gist.github.com/heardk/ded40b72056cee33abb18f3724e0a580
             try {
-                pandoc.exe -f docx -t $converter -i $fullexportpath -o "$($fullfilepathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($mediaPath)"
+                pandoc.exe -f  docx -t $converter-simple_tables-multiline_tables-grid_tables+pipe_tables -i $fullexportpath -o "$($fullfilepathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($mediaPath)"
             }
             catch {
                 Write-Host "Error while converting file '$($page.name)' to md: $($Error[0].ToString())" -ForegroundColor Red
                 $totalerr += "Error while converting file '$($page.name)' to md: $($Error[0].ToString())`r`n"
             }
 
-            # export inserted file objects
+            # export inserted file objects, removing any escaped symbols from filename so that links to them actually work
             [xml]$pagexml = ""
             $OneNote.GetPageContent($pageid, [ref]$pagexml, 7)
             $pageinsertedfiles = $pagexml.Page.Outline.OEChildren.OE | Where-Object { $_.InsertedFile }
             foreach ($pageinsertedfile in $pageinsertedfiles) {
+                $pageinsertedfile.InsertedFile.preferredName
+                New-Item -Path "$($mediaPath)" -Name "media" -ItemType "directory" -ErrorAction SilentlyContinue
                 $destfilename = ""
                 try {
-                    $destfilename = $pageinsertedfile.InsertedFile.preferredName | Remove-InvalidFileNameChars
-                    Copy-Item -Path "$($pageinsertedfile.InsertedFile.pathCache)" -Destination "$($fullexportdirpath)\$($destfilename)" -Force
+                    $destfilename = $pageinsertedfile.InsertedFile.preferredName | Remove-InvalidFileNameCharsInsertedFiles
+                    Copy-Item -Path "$($pageinsertedfile.InsertedFile.pathCache)" -Destination "$($mediaPath)\media\$($destfilename)" -Force
                 }
                 catch {
                     Write-Host "Error while copying file object '$($pageinsertedfile.InsertedFile.preferredName)' for page '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
@@ -137,7 +165,9 @@ Function ProcessSections ($group, $FilePath) {
                 }
                 # Change MD file Object Name References
                 try {
-                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($pageinsertedfile.InsertedFile.preferredName)", "[$($destfilename)](./$($destfilename))")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                    $pageinsertedfile2 = $pageinsertedfile.InsertedFile.preferredName.Replace("$","\$").Replace("^","\^").Replace("'","\'")                                
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($pageinsertedfile2)", "[$($destfilename)]($($mediaPath)/media/$($destfilename))")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+
                 }
                 catch {
                     Write-Host "Error while renaming file object name references to '$($pageinsertedfile.InsertedFile.preferredName)' for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
@@ -145,7 +175,23 @@ Function ProcessSections ($group, $FilePath) {
                 }
             }
 
-            # rename images to have unique names - NoteName_Image#_HHmmssff.xyz
+            #Clear double spaces from bullets and nonbreaking spaces from blank lines
+            if ($keepspaces -eq 2 ) {
+                #do nothing
+            }
+            else {
+                try {
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("`r`n`r`n", "`r`n")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace([char]0x00A0,[char]0x000A)) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                }
+                catch {
+                    Write-Host "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())" -ForegroundColor Red
+                    $totalerr += "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())`r`n"
+
+                }    
+            }
+            
+           # rename images to have unique names - NoteName_Image#_HHmmssff.xyz
             $timeStamp = (Get-Date -Format HHmmssff).ToString()
             $timeStamp = $timeStamp.replace(':', '')
             $images = Get-ChildItem -Path "$($mediaPath)/media" -Include "*.png", "*.gif", "*.jpg", "*.jpeg" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name.SubString(0,5) -match "image" }
@@ -179,6 +225,14 @@ Function ProcessSections ($group, $FilePath) {
             catch {
                 Write-Host "Error while renaming image file path references for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
                 $totalerr += "Error while renaming image file path references for file '$($page.name)': $($Error[0].ToString())`r`n"
+            }
+
+            # Clear backslash escape symbols
+            if ($keepescape -eq 2 ) {
+                #do nothing
+            }
+            else {
+                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("\",'')) | Set-Content -Path "$($fullfilepathwithoutextension).md"
             }
 
             # Cleanup Word files
@@ -243,6 +297,16 @@ else { $converter = "markdown"}
 "1: Discard intermediate .docx files - Default"
 "2: Keep .docx files"
 [int] $keepdocx = Read-Host -Prompt "Entry"
+
+"-----------------------------------------------"
+"1: Clear double spaces in bullets - Default"
+"2: Keep double spaces"
+[int] $keepspaces = Read-Host -Prompt "Entry"
+
+"-----------------------------------------------"
+"1: Clear '\' symbol escape character from files"
+"2: Keep '\' symbol escape"
+[int] $keepescape = Read-Host -Prompt "Entry"
 
 if (Test-Path -Path $notesdestpath) {
     # open OneNote hierarchy

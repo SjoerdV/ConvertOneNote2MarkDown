@@ -25,7 +25,7 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
 * Allow you to **choose between creating subfolders for subpages** (e.g. Page\Subpage.md) or **appending prefixes** (e.g. Page_Subpage.md)
 * Allow you you choose between putting all **Images** in a central '/media' folder for each notebook, or in a separate '/media' folder in each folder of the hierarchy
 * Fix image references in the resulting .md files, generating *relative* references to the image files within the markdown document
-* Extract all **File Objects** to the same folder as where the page is in and fix references in the resulting .md files
+* Extract all **File Objects** to the same folder as Images and fix references in the resulting .md files. Symbols in file names removed for link compatibility.
 * Allow you to select between **discarding or keeping intermediate Word files**
 * Allow user can **select which markdown format will be used**, defaulting to Pandoc's standard format, which strips any HTML from tables along with other desirable (for me) formatting choices.
    * markdown (Pandoc’s Markdown)
@@ -34,6 +34,7 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
    * markdown_mmd (MultiMarkdown)
    * markdown_phpextra (PHP Markdown Extra)
    * markdown_strict (original unextended Markdown)
+* Remove double spaces and "\" escape symbol that are created when converting with Pandoc
 * See more details on these options here: https://pandoc.org/MANUAL.html#options
 ## Known Issues
 
@@ -120,6 +121,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+### [2.2] - 2020-07-16
+#### Added
+* Symbols removed from attached file names
+* Files stored in same folder as images
+* Double spaces and "\" escape symbols removed after conversion with Pandoc
+* Tables use piped formatting for compatibility with Obsidian
+
+#### Changed
+* User prompt layouts 
+
+#### Removed
+* Nothing
+ 
 ### [2.1] - 2020-07-15
 #### Added
 * Prompt for keep or discard .docx files

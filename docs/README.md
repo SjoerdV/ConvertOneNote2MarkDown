@@ -9,7 +9,7 @@ abstract: |
   This document is about converting your OneNote data to Markdown format.
 permalink: /index.html
 ---
-[![Github All Releases](https://img.shields.io/github/downloads/SjoerdV/ConvertOneNote2MarkDown/total.svg)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/releases)
+[![GitHub All Releases](https://img.shields.io/github/downloads/SjoerdV/ConvertOneNote2MarkDown/total.svg)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/releases)
 
 ## Convert OneNote to MarkDown
 

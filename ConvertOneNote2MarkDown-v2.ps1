@@ -54,7 +54,8 @@ Function ProcessSections ($group, $FilePath) {
             $fullfilepathwithoutextension = ""
             $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
             $fullexportpath = ""
-            $fullexportpath = "$($fullfilepathwithoutextension).docx"
+            #$fullexportpath = "$($fullfilepathwithoutextension).docx"
+            
 
             # process for subpage prefixes
             if ($pagelevel -eq 1) {
@@ -117,6 +118,8 @@ Function ProcessSections ($group, $FilePath) {
                 $pagename = "$($pagename)-$recurrence"
                 $recurrence++
             }
+            
+            $fullexportpath = "$($NotebookFilePath)\docx\$($pagename).docx"
 
             # use existing or create new docx files 
             if ($usedocx -eq 2) {
@@ -279,6 +282,21 @@ Function ProcessSections ($group, $FilePath) {
 $notesdestpath = Read-Host -Prompt "Entry"
 ""
 "-----------------------------------------------"
+
+#prompt to use existing word docs (90% faster)
+""
+"-----------------------------------------------"
+"1: Create new .docx files - Default"
+"2: Use existing .docx files (90% faster)"
+[int] $usedocx = Read-Host -Prompt "Entry"
+
+#prompt to discard intermediate word docs
+""
+"-----------------------------------------------"
+"1: Discard intermediate .docx files - Default"
+"2: Keep .docx files"
+[int] $keepdocx = Read-Host -Prompt "Entry"
+
 # prompt for prefix vs subfolders
 "1: Create folders for subpages (e.g. Page\Subpage.md)- Default"
 "2: Add prefixes for subpages (e.g. Page_Subpage.md)"
@@ -317,20 +335,6 @@ elseif ($conversion -eq 5){ $converter = "markdown_phpextra"}
 elseif ($conversion -eq 6){ $converter = "markdown_strict"}
 else { $converter = "markdown"}
 
-#prompt to use existing word docs (90% faster)
-""
-"-----------------------------------------------"
-"1: Create new .docx files - Default"
-"2: Use existing .docx files (90% faster)"
-[int] $usedocx = Read-Host -Prompt "Entry"
-
-#prompt to discard intermediate word docs
-""
-"-----------------------------------------------"
-"1: Discard intermediate .docx files - Default"
-"2: Keep .docx files"
-[int] $keepdocx = Read-Host -Prompt "Entry"
-
 #prompt to clear double spaces between bullets
 "-----------------------------------------------"
 "1: Clear double spaces in bullets - Default"
@@ -359,6 +363,8 @@ if (Test-Path -Path $notesdestpath) {
         $NotebookFilePath = "$($notesdestpath)\$($notebookFileName)"
         $levelsfromroot = 0
        
+        New-Item -Path "$($NotebookFilePath)" -Name "docx" -ItemType "directory" -ErrorAction SilentlyContinue
+
         "=============="
         #process any sections that are not in a section group
         ProcessSections $notebook $NotebookFilePath

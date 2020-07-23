@@ -26,7 +26,8 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
 * Allow you you choose between putting all **Images** in a central '/media' folder for each notebook, or in a separate '/media' folder in each folder of the hierarchy
 * Fix image references in the resulting .md files, generating *relative* references to the image files within the markdown document
 * Extract all **File Objects** to the same folder as Images and fix references in the resulting .md files. Symbols in file names removed for link compatibility.
-* Allow you to select between **discarding or keeping intermediate Word files**
+* Can choose between **discarding or keeping intermediate Word files**. Intermedia Word files are stored in a central notebook folder. 
+* Allow to choose between converting from existing docx (90% faster) and creating new ones - useful if just want to test differences in the various processing options without generating new docx each time
 * Allow user can **select which markdown format will be used**, defaulting to Pandoc's standard format, which strips any HTML from tables along with other desirable (for me) formatting choices.
    * markdown (Pandoc’s Markdown)
    * commonmark (CommonMark Markdown)
@@ -36,7 +37,6 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
    * markdown_strict (original unextended Markdown)
 * See more details on these options here: https://pandoc.org/MANUAL.html#options
 * Remove double spaces and "\" escape symbol that are created when converting with Pandoc
-* Allow to choose between converting from existing docx (90% faster) and creating new ones - useful if just want to test differences in the various processing options without generating new docx each time
 * Improved file headers, with title now as a # heading, standardized DateTime format, and horizontal line to separate from rest of document
 
 ## Known Issues

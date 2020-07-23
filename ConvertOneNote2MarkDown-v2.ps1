@@ -8,8 +8,8 @@ Function Remove-InvalidFileNameChars {
     )
     
     
-    $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-    return (((($newName -replace "\s", "_") -replace "\[", "(") -replace "\]", ")").Substring(0,$(@{$true=130;$false=$newName.length}[$newName.length -gt 130])))
+    $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '-'
+    return (((($newName -replace "\s", "-") -replace "\[", "(") -replace "\]", ")").Substring(0,$(@{$true=130;$false=$newName.length}[$newName.length -gt 150])))
 }
 Function Remove-InvalidFileNameCharsInsertedFiles {
     param(
@@ -25,8 +25,8 @@ Function Remove-InvalidFileNameCharsInsertedFiles {
 
     $rePattern = ($SpecialChars.ToCharArray() |ForEach-Object { [regex]::Escape($_) }) -join "|"
 
-    $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '_'
-    return ($newName -replace $rePattern,"" -replace "\s","_")
+    $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '-'
+    return ($newName -replace $rePattern,"" -replace "\s","-")
 }
   
 Function ProcessSections ($group, $FilePath) {
@@ -56,23 +56,6 @@ Function ProcessSections ($group, $FilePath) {
             $fullexportpath = ""
             $fullexportpath = "$($fullfilepathwithoutextension).docx"
 
-            # make sure there is no existing Word file
-            if ([System.IO.File]::Exists($fullexportpath)) {
-                try {
-                    Remove-Item -path $fullexportpath -Force -ErrorAction SilentlyContinue
-                }
-                catch {
-                    Write-Host "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())" -ForegroundColor Red
-                    $totalerr += "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())`r`n"
-                }
-            }
-
-            # in case multiple pages with the same name exist in a section, postfix the filename
-            if ([System.IO.File]::Exists("$($fullfilepathwithoutextension).md")) {
-                $pagename = "$($pagename)_$recurrence"
-                $recurrence++
-            }
-            
             # process for subpage prefixes
             if ($pagelevel -eq 1) {
                 $pageprefix = ""
@@ -93,7 +76,7 @@ Function ProcessSections ($group, $FilePath) {
                     }
                     # level 3 under level 1, without a level 2
                     elseif ($previouspagelevel -eq 1) {
-                        $pageprefix = "$($previouspagenamelevel1)$($prefixjoiner)_"
+                        $pageprefix = "$($previouspagenamelevel1)$($prefixjoiner)"
                     }
                     #and if previous was 3, do nothing/keep previous label
                     $previouspagelevel = 3
@@ -109,7 +92,7 @@ Function ProcessSections ($group, $FilePath) {
                 }
                 #all else/default, create subfolders and filepath if subfolders selected
                 else {
-                    New-Item -Path "$($fullexportdirpath)\$($pageprefix)" -ItemType "directory" -ErrorAction SilentlyContinue
+                    New-Item -Path "$($fullexportdirpath)\$($pageprefix)" -ItemType "directory" -ErrorAction SilentlyContinue | Out-Null
                     $fullexportdirpath = "$($fullexportdirpath)\$($pageprefix)"
                     $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
                     $levelsprefix = "../"*($levelsfromroot+$pagelevel-1)+".."
@@ -118,7 +101,7 @@ Function ProcessSections ($group, $FilePath) {
             else {
                 $levelsprefix = "../"*($levelsfromroot)+".."
             }
-
+            
             # set media location (central media folder at notebook-level or adjacent to .md file) based on initial user prompt
             if ($medialocation -eq 2) {
                 $mediaPath = $fullexportdirpath
@@ -127,17 +110,50 @@ Function ProcessSections ($group, $FilePath) {
             else {
                 $mediaPath = $NotebookFilePath
             }
-
-            # publish OneNote page to Word
-            try {
-                $OneNote.Publish($pageid, $fullexportpath, "pfWord", "")
-            }
-            catch {
-                Write-Host "Error while publishing file '$($page.name)' to docx: $($Error[0].ToString())" -ForegroundColor Red
-                $totalerr += "Error while publishing file '$($page.name)' to docx: $($Error[0].ToString())`r`n"
+                        
+            # in case multiple pages with the same name exist in a section, postfix the filename. Run after pages 
+            if ([System.IO.File]::Exists("$($fullfilepathwithoutextension).md")) {
+                #continue
+                $pagename = "$($pagename)-$recurrence"
+                $recurrence++
             }
 
-            # convert Word to Markdown
+            # use existing or create new docx files 
+            if ($usedocx -eq 2) {
+                # Only create new docx if doesn't exist
+                if (![System.IO.File]::Exists($fullexportpath)) {
+                    # publish OneNote page to Word
+                    try {
+                        $OneNote.Publish($pageid, $fullexportpath, "pfWord", "")
+                    }
+                    catch {
+                        Write-Host "Error while publishing file '$($page.name)' to docx: $($Error[0].ToString())" -ForegroundColor Red
+                        $totalerr += "Error while publishing file '$($page.name)' to docx: $($Error[0].ToString())`r`n"
+                    }
+                } 
+            }
+            else{
+                # remove any existing docx files
+                if ([System.IO.File]::Exists($fullexportpath)) {
+                    try {
+                        Remove-Item -path $fullexportpath -Force -ErrorAction SilentlyContinue
+                    }
+                    catch {
+                        Write-Host "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())" -ForegroundColor Red
+                        $totalerr += "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())`r`n"
+                    }
+                }
+
+                # publish OneNote page to Word
+                try {
+                    $OneNote.Publish($pageid, $fullexportpath, "pfWord", "")
+                }
+                catch {
+                    Write-Host "Error while publishing file '$($page.name)' to docx: $($Error[0].ToString())" -ForegroundColor Red
+                    $totalerr += "Error while publishing file '$($page.name)' to docx: $($Error[0].ToString())`r`n"
+                }
+            }            
+
             # https://gist.github.com/heardk/ded40b72056cee33abb18f3724e0a580
             try {
                 pandoc.exe -f  docx -t $converter-simple_tables-multiline_tables-grid_tables+pipe_tables -i $fullexportpath -o "$($fullfilepathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($mediaPath)"
@@ -146,14 +162,13 @@ Function ProcessSections ($group, $FilePath) {
                 Write-Host "Error while converting file '$($page.name)' to md: $($Error[0].ToString())" -ForegroundColor Red
                 $totalerr += "Error while converting file '$($page.name)' to md: $($Error[0].ToString())`r`n"
             }
-
+            
             # export inserted file objects, removing any escaped symbols from filename so that links to them actually work
             [xml]$pagexml = ""
             $OneNote.GetPageContent($pageid, [ref]$pagexml, 7)
             $pageinsertedfiles = $pagexml.Page.Outline.OEChildren.OE | Where-Object { $_.InsertedFile }
             foreach ($pageinsertedfile in $pageinsertedfiles) {
-                $pageinsertedfile.InsertedFile.preferredName
-                New-Item -Path "$($mediaPath)" -Name "media" -ItemType "directory" -ErrorAction SilentlyContinue
+                New-Item -Path "$($mediaPath)" -Name "media" -ItemType "directory" -ErrorAction SilentlyContinue | Out-Null
                 $destfilename = ""
                 try {
                     $destfilename = $pageinsertedfile.InsertedFile.preferredName | Remove-InvalidFileNameCharsInsertedFiles
@@ -174,29 +189,36 @@ Function ProcessSections ($group, $FilePath) {
                     $totalerr += "Error while renaming file object name references to '$($pageinsertedfile.InsertedFile.preferredName)' for file '$($page.name)': $($Error[0].ToString())`r`n"
                 }
             }
-
+            
+            # add YAML
+            $orig = Get-Content -path "$($fullfilepathwithoutextension).md"
+            $orig[0] = "# $($page.name)"
+            $insert1 = "$($page.dateTime)"
+            $insert1 =[Datetime]::ParseExact($insert1, 'yyyy-MM-ddTHH:mm:ss.fffZ', $null)
+            $insert1 = $insert1.ToString("yyyy-MM-dd HH:mm:ss
+            ")
+            $insert2 = "---" 
+            Set-Content -Path "$($fullfilepathwithoutextension).md" -Value $orig[0..0], $insert1, $insert2, $orig[6..$orig.Length]
+            
             #Clear double spaces from bullets and nonbreaking spaces from blank lines
             if ($keepspaces -eq 2 ) {
                 #do nothing
             }
             else {
                 try {
-                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("`r`n`r`n", "`r`n")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
-                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace([char]0x00A0,[char]0x000A)) | Set-Content -Path "$($fullfilepathwithoutextension).md"
-                }
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace(">","").Replace("<","").Replace([char]0x00A0,[char]0x000A).Replace([char]0x000A,[char]0x000A).Replace("`r`n`r`n", "`r`n")) | Set-Content -Path "$($fullfilepathwithoutextension).md"                 }
                 catch {
                     Write-Host "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())" -ForegroundColor Red
                     $totalerr += "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())`r`n"
-
                 }    
             }
             
-           # rename images to have unique names - NoteName_Image#_HHmmssff.xyz
+            # rename images to have unique names - NoteName-Image#-HHmmssff.xyz
             $timeStamp = (Get-Date -Format HHmmssff).ToString()
             $timeStamp = $timeStamp.replace(':', '')
             $images = Get-ChildItem -Path "$($mediaPath)/media" -Include "*.png", "*.gif", "*.jpg", "*.jpeg" -Recurse -ErrorAction SilentlyContinue | Where-Object { $_.Name.SubString(0,5) -match "image" }
             foreach ($image in $images) {
-                $newimageName = "$($pagename.SubString(0,[math]::min(30,$pagename.length)))_$($image.BaseName)_$($timeStamp)$($image.Extension)"
+                $newimageName = "$($pagename.SubString(0,[math]::min(30,$pagename.length)))-$($image.BaseName)-$($timeStamp)$($image.Extension)"
                 # Rename Image
                 try {
                     Rename-Item -Path "$($image.FullName)" -NewName $newimageName -ErrorAction SilentlyContinue
@@ -269,6 +291,8 @@ else {
     $prefixFolders = 1
     $prefixjoiner = "\"
 }
+
+#prompt for media in single or multiple folders
 ""
 "-----------------------------------------------"
 "1: Images stored in single 'media' folder at Notebook-level (Default)"
@@ -292,21 +316,33 @@ elseif ($conversion -eq 4){ $converter = "markdown_mmd"}
 elseif ($conversion -eq 5){ $converter = "markdown_phpextra"}
 elseif ($conversion -eq 6){ $converter = "markdown_strict"}
 else { $converter = "markdown"}
+
+#prompt to use existing word docs (90% faster)
+""
+"-----------------------------------------------"
+"1: Create new .docx files - Default"
+"2: Use existing .docx files (90% faster)"
+[int] $usedocx = Read-Host -Prompt "Entry"
+
+#prompt to discard intermediate word docs
 ""
 "-----------------------------------------------"
 "1: Discard intermediate .docx files - Default"
 "2: Keep .docx files"
 [int] $keepdocx = Read-Host -Prompt "Entry"
 
+#prompt to clear double spaces between bullets
 "-----------------------------------------------"
 "1: Clear double spaces in bullets - Default"
 "2: Keep double spaces"
 [int] $keepspaces = Read-Host -Prompt "Entry"
 
+# prompt to clear escape symbols from md files 
 "-----------------------------------------------"
 "1: Clear '\' symbol escape character from files"
 "2: Keep '\' symbol escape"
 [int] $keepescape = Read-Host -Prompt "Entry"
+
 
 if (Test-Path -Path $notesdestpath) {
     # open OneNote hierarchy
@@ -322,8 +358,7 @@ if (Test-Path -Path $notesdestpath) {
         New-Item -Path "$($notesdestpath)\" -Name "$($notebookFileName)" -ItemType "directory" -ErrorAction SilentlyContinue
         $NotebookFilePath = "$($notesdestpath)\$($notebookFileName)"
         $levelsfromroot = 0
-
-        
+       
         "=============="
         #process any sections that are not in a section group
         ProcessSections $notebook $NotebookFilePath

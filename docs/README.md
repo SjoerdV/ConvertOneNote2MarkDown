@@ -34,8 +34,11 @@ The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote 
    * markdown_mmd (MultiMarkdown)
    * markdown_phpextra (PHP Markdown Extra)
    * markdown_strict (original unextended Markdown)
-* Remove double spaces and "\" escape symbol that are created when converting with Pandoc
 * See more details on these options here: https://pandoc.org/MANUAL.html#options
+* Remove double spaces and "\" escape symbol that are created when converting with Pandoc
+* Allow to choose between converting from existing docx (90% faster) and creating new ones - useful if just want to test differences in the various processing options without generating new docx each time
+* Improved file headers, with title now as a # heading, standardized DateTime format, and horizontal line to separate from rest of document
+
 ## Known Issues
 
 1. If there are any collapsed paragraphs in your pages, the collapsed/hidden paragraphs will not be exported
@@ -120,6 +123,17 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+
+### [2.3] - 2020-07-16
+#### Added
+* Improved file header with title as # heading, standardized DateTime format and horizontal line to separate from document
+* Option to re-use existing docx file - 90% faster - for when testing different processing options
+
+#### Changed
+* Tweaks to filenames and other formatting
+
+#### Removed
+* Nothing
 
 ### [2.2] - 2020-07-16
 #### Added

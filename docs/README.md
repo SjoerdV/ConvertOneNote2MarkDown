@@ -87,12 +87,10 @@ Clone this repository to acquire the powershell script.
 1. It will ask you for the path to store the markdown folder structure. Please use an empty folder.
 
     **Attention:** use a full absolute path for the destination
-1. Select whether you want to create subfolders (1) or append prefixes (2) for subpages.
-1. Select whether you want to store images in central media folder or separate folder for each folder in the hierarchy
-1. Select which conversion method/markdown format you want: 1-6, defaulting to 1: Pandoc
-1. Select whether you want to discard or keep the intermediate .docx files
-
+1. Read the prompts carefully to select your desired options. If you aren't actively editing your pages in Onenote, it is HIGHLY recommended that you don't delete the intermediate word docs, as they take 80+% of the time to generate. You can then quickly re-run the script with different parameters until you find what you like.
 1. Sit back and wait until the process completes
+1. To stop the process at any time, press Ctrl+C. 
+1. If you like, you can inspect some of the .md files prior to completion. If you're not happy with the results, stop the process, delete the .md and media folders and re-run with different parameters.
 
 ## Results
 
@@ -100,9 +98,9 @@ The script will log any errors encountered at the end of its run, so please revi
 If you are satisfied check the results with a markdown editor like VSCode. All images should popup just right in the Preview Pane for Markdown files.
 
 ## Recommendations
-
-1. I would like to recommend this repository [VSCodeNotebook](https://github.com/aviaryan/VSCodeNotebook) to host your resulting Markdown Notes folder structure. This solution supports encrypting sensitive (markdown) files and works quite nicely.
-1. While working with markdown in VSCode these are the extensions I like using:
+1. I'd like to strongly recommend the [VS Code Foam extension](https://github.com/foambubble/foam-template), which pulls together a selection of markdown-related extensions to become a comprehensive knowledge management tool.
+1. I'd also like to recommend [Obsidian.md](http://obsidian.md), which is another fantastic markdown knowledge management tool. 
+1. Some other VSCode markdown extensions to check out are:
 
 ```powershell
     .\code `

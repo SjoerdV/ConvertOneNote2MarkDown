@@ -17,7 +17,7 @@ permalink: /index.html
 
 !!! question Ready to make the step to Markdown and saying farewell to your OneNote, EverNote or whatever proprietary note taking tool you are using? Nothing beats clear text, right? Read on!
 
-The powershell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Object Model on your workstation to convert all OneNote pages to Word documents and then utilizes PanDoc to convert the Word documents to Markdown (.md) format. It will also:
+The PowerShell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Object Model on your workstation to convert all OneNote pages to Word documents and then utilizes PanDoc to convert the Word documents to Markdown (.md) format. It will also:
 
 * Create a **folder structure** for your Notebooks and Sections
 * Append **prefixes to page filenames** if they were indented beneath other pages (so called 'page levels')

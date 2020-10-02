@@ -21,7 +21,7 @@ Ready to make the step to Markdown and saying farewell to your OneNote, EverNote
 The powershell script 'ConvertOneNote2MarkDown-v2.ps1' will utilize the OneNote Object Model on your workstation to convert all OneNote pages to Word documents and then utilizes PanDoc to convert the Word documents to Markdown (.md) format. It will also:
 
 * Create a **folder structure** for your Notebooks and Sections
-* Process pages that are in sections at the **Notebook, Section Group and 1st Nested Section Group levels**
+* Process pages that are in sections at the **Notebook, Section Group and up to 5 Nested Section Group levels**
 * Allow you to **choose between creating subfolders for subpages** (e.g. Page\Subpage.md) or **appending prefixes** (e.g. Page_Subpage.md)
 * Allow you you choose between putting all **Images** in a central '/media' folder for each notebook, or in a separate '/media' folder in each folder of the hierarchy
 * Fix image references in the resulting .md files, generating *relative* references to the image files within the markdown document

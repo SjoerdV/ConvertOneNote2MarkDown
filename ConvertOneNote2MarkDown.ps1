@@ -153,7 +153,7 @@ if (Test-Path -Path $notesdestpath) {
                 }
                 # Change MD file Object Name References
                 try {
-                  ((Get-Content -path "$($fullexportpathwithoutextension).md" -Raw).Replace("$($pageinsertedfile.InsertedFile.preferredName)", "[$($destfilename)](./$($destfilename))")) | Set-Content -Path "$($fullexportpathwithoutextension).md"
+                  ((Get-Content -LiteralPath "$($fullexportpathwithoutextension).md" -Raw).Replace("$($pageinsertedfile.InsertedFile.preferredName)", "[$($destfilename)](./$($destfilename))")) | Set-Content -LiteralPath "$($fullexportpathwithoutextension).md"
                 }
                 catch {
                   Write-Host "Error while renaming file object name references to '$($pageinsertedfile.InsertedFile.preferredName)' for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
@@ -178,7 +178,7 @@ if (Test-Path -Path $notesdestpath) {
                 }
                 # Change MD file Image Name References
                 try {
-                  ((Get-Content -path "$($fullexportpathwithoutextension).md" -Raw).Replace("$($image.Name)", "$($newimageName)")) | Set-Content -Path "$($fullexportpathwithoutextension).md"
+                  ((Get-Content -LiteralPath "$($fullexportpathwithoutextension).md" -Raw).Replace("$($image.Name)", "$($newimageName)")) | Set-Content -LiteralPath "$($fullexportpathwithoutextension).md"
                 }
                 catch {
                   Write-Host "Error while renaming image file name references to '$($image.Name)' for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
@@ -189,9 +189,9 @@ if (Test-Path -Path $notesdestpath) {
               # change MD file Image Path References
               try {
                 # Change MD file Image Path References in Markdown
-                ((Get-Content -path "$($fullexportpathwithoutextension).md" -Raw).Replace("$($fullexportdirpath.Replace("\","\\"))/", "")) | Set-Content -Path "$($fullexportpathwithoutextension).md"
+                ((Get-Content -LiteralPath "$($fullexportpathwithoutextension).md" -Raw).Replace("$($fullexportdirpath.Replace("\","\\"))/", "")) | Set-Content -LiteralPath "$($fullexportpathwithoutextension).md"
                 # Change MD file Image Path References in HTML
-                ((Get-Content -path "$($fullexportpathwithoutextension).md" -Raw).Replace("$($fullexportdirpath)/", "")) | Set-Content -Path "$($fullexportpathwithoutextension).md"
+                ((Get-Content -LiteralPath "$($fullexportpathwithoutextension).md" -Raw).Replace("$($fullexportdirpath)/", "")) | Set-Content -LiteralPath "$($fullexportpathwithoutextension).md"
               }
               catch {
                 Write-Host "Error while renaming image file path references for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red

@@ -1,11 +1,20 @@
-$debugActive = 1
-$spaceChar = " "
-$mocForObsidian = 1
-$subDir = 0
-$globalFileName = 1
-$totalParsedLinkDestinationUnresolved = 0
-$totalParsedLinkSection = 0
-$totalParsedPageAndParagraphSection = 0
+#Define global variables
+[boolean]$global:activateDebug = 0
+
+[boolean]$global:activateMOCForObsidian = 1
+[boolean]$global:activateSubDir = 0
+[boolean]$global:activateGlobalFileName = 0
+
+[int]$global:fileCount = 0
+[int]$global:pageNameRecurrenceCount = 1
+
+[string]$global:filePrefix = "File-"
+[string]$global:SpaceChar = " "
+
+[int]$global:parsedLinksMatched = 0
+[int]$global:parsedLinksNotMatched = 0
+
+#Functions
 Function Remove-InvalidFileNameChars {
     param(
         [Parameter(Mandatory = $true,
@@ -17,13 +26,14 @@ Function Remove-InvalidFileNameChars {
     
     $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '-'
     $newName = $newName.Replace('*', '-').Replace('"', '').Replace('\', '-').Replace('/', '-').Replace('<', '-').Replace('>', '-').Replace(':', '').Replace('|', '-').Replace('?', '') #Obsidian non valid file name chars
+    $newName = $newName.Trim()
 
-    if (($debugActive -eq 1) -and ($newName -ne $Name))
+    if (($global:activateDebug -eq 1) -and ($newName -ne $Name))
     {
-        Write-Host "$($name) `nUL-> [[$($newName)]]" -ForegroundColor Blue
+        Write-Host "$($name) `nRenamed to '[[$($newName)]]'" -ForegroundColor Blue
     }
 
-    return (((($newName -replace "\s", "$($spaceChar)") -replace "\[", "(") -replace "\]", ")").Substring(0,$(@{$true=130;$false=$newName.length}[$newName.length -gt 150])))
+    return (((($newName -replace "\s", "$($global:SpaceChar)") -replace "\[", "(") -replace "\]", ")").Substring(0,$(@{$true=130;$false=$newName.length}[$newName.length -gt 150])))
 }
 
 Function Remove-InvalidIdNameChars {
@@ -37,7 +47,7 @@ Function Remove-InvalidIdNameChars {
     
     
     $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '-'
-    return (((($newName -replace "\s", " ") -replace "\{", "--") -replace "\}", "--").Substring(0,$(@{$true=130;$false=$newName.length}[$newName.length -gt 150])))
+    return (((($newName -replace "\s", "$($global:SpaceChar)") -replace "\{", "--") -replace "\}", "--").Substring(0,$(@{$true=130;$false=$newName.length}[$newName.length -gt 150])))
 }
 Function Remove-InvalidFileNameCharsInsertedFiles {
     param(
@@ -54,13 +64,13 @@ Function Remove-InvalidFileNameCharsInsertedFiles {
     $rePattern = ($SpecialChars.ToCharArray() |ForEach-Object { [regex]::Escape($_) }) -join "|"
 
     $newName = $Name.Split([IO.Path]::GetInvalidFileNameChars()) -join '-'
-    return ($newName -replace $rePattern,"" -replace "\s","$($spaceChar)")
+    return ($newName -replace $rePattern,"" -replace "\s","$($global:SpaceChar)")
 }
   
 Function ProcessSections ($group, $FilePath) {
     [string]$sectionGroupValue
     
-    if ($mocForObsidian -eq 1) #Header for section group moc file
+    if ($global:activateMOCForObsidian -eq 1) #Header for section group moc file
     {
         [string]$sectionGroupValue = "# $($group.Name)`n`n---"
     }
@@ -69,7 +79,7 @@ Function ProcessSections ($group, $FilePath) {
         "--------------"
         "### " + $section.Name
         $sectionFileName = "$($section.Name)" | Remove-InvalidFileNameChars
-        if($subDir -eq 1) 
+        if($global:activateSubDir -eq 1) 
         {
             New-Item -Path "$($FilePath)" -Name "$($sectionFileName)" -ItemType "directory" -ErrorAction SilentlyContinue
         }
@@ -79,16 +89,16 @@ Function ProcessSections ($group, $FilePath) {
         [string]$pageprefix = ""
         [string]$sectionValue = ""
 
-        if ($mocForObsidian -eq 1) #Header for section moc file
+        if ($global:activateMOCForObsidian -eq 1) #Header for section moc file
         {
             [string]$sectionValue = "# $($section.Name)`n`n---"
         }
 
         foreach ($page in $section.Page) {
             # set page variables
-            if ($subDir -eq 1) #Global if no sub dirs
+            if ($global:activateSubDir -eq 1) #Global if no sub dirs
             {
-                $recurrence = 1
+                $global:pageNameRecurrenceCount = 1
             }
 
             $pagelevel = $page.pagelevel
@@ -99,7 +109,7 @@ Function ProcessSections ($group, $FilePath) {
             $pagename = $page.name | Remove-InvalidFileNameChars
             $fullexportdirpath = ""
             
-            if($subDir -eq 1) 
+            if($global:activateSubDir -eq 1) 
             {
                 $fullexportdirpath = "$($FilePath)\$($sectionFileName)"
             }
@@ -113,35 +123,17 @@ Function ProcessSections ($group, $FilePath) {
             $subpagelinkcountlevel1 = 0
             $subpagelinkcountlevel2 = 0
             $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
-            
-           #if level 2 or 3 (i.e. has a non-blank pageprefix)
-           if ($pageprefix) {
-                #create filename prefixes and filepath if prefixes selected
-                if ($prefixFolders -eq 2) {
-                    $pagename = "$($pageprefix)_$($pagename)"
+             
+            if ($global:activateMOCForObsidian)
+            {
+                # in case multiple pages with the same name exist in a section, postfix the filename. Run after pages 
+                if ([System.IO.File]::Exists("$($fullfilepathwithoutextension).md")) {
+                    #continue
+                    $pagename = "$($pagename)-$global:pageNameRecurrenceCount"
                     $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
-                }
-                #all else/default, create subfolders and filepath if subfolders selected
-                elseif ($subDir -eq 1) {
-                    New-Item -Path "$($fullexportdirpath)\$($pageprefix)" -ItemType "directory" -ErrorAction SilentlyContinue | Out-Null
-                    $fullexportdirpath = "$($fullexportdirpath)\$($pageprefix)"
-                    $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
-                    $levelsprefix = "../"*($levelsfromroot+$pagelevel-1)+".."
+                    $global:pageNameRecurrenceCount++ 
                 }
             }
-            else {
-                $levelsprefix = "../"*($levelsfromroot)+".."
-            }
-
-            # in case multiple pages with the same name exist in a section, postfix the filename. Run after pages 
-            if ([System.IO.File]::Exists("$($fullfilepathwithoutextension).md")) {
-                #continue
-                $pagename = "$($pagename)-$recurrence"
-                $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
-                $recurrence++ 
-            }
-            
-            
 
             # process for subpage prefixes
             if ($pagelevel -eq 1) {
@@ -152,7 +144,7 @@ Function ProcessSections ($group, $FilePath) {
                 $subpagelinkcountlevel1 = 0
                 "#### " + $page.name
 
-                if ($mocForObsidian -eq 1)
+                if ($global:activateMOCForObsidian -eq 1)
                 {
                     $sectionValue = $sectionValue + "`n- [[$($page.name)]]"
                 }
@@ -164,7 +156,7 @@ Function ProcessSections ($group, $FilePath) {
                     $subpagelinkcountlevel2 = 0
                     "##### " + $page.name
 
-                    if ($mocForObsidian -eq 1)
+                    if ($global:activateMOCForObsidian -eq 1)
                     {
                         # Set links to subpages
                         $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel1).md"
@@ -188,7 +180,7 @@ Function ProcessSections ($group, $FilePath) {
                     $previouspagelevel = 3
                     "####### " + $page.name
 
-                    if ($mocForObsidian -eq 1)
+                    if ($global:activateMOCForObsidian -eq 1)
                     {
                         # Set links to subpages
                         $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel2).md"
@@ -200,7 +192,29 @@ Function ProcessSections ($group, $FilePath) {
                         $subpagelinkcountlevel2++
                     }
             }
-            
+
+            if ($global:activateMOCForObsidian -ne 1)
+            {
+                #if level 2 or 3 (i.e. has a non-blank pageprefix)
+                if ($pageprefix) {
+                    #create filename prefixes and filepath if prefixes selected
+                    if ($prefixFolders -eq 2) {
+                        $pagename = "$($pageprefix)_$($pagename)"
+                        $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
+                    }
+                    #all else/default, create subfolders and filepath if subfolders selected
+                    elseif ($global:activateSubDir -eq 1) {
+                        New-Item -Path "$($fullexportdirpath)\$($pageprefix)" -ItemType "directory" -ErrorAction SilentlyContinue | Out-Null
+                        $fullexportdirpath = "$($fullexportdirpath)\$($pageprefix)"
+                        $fullfilepathwithoutextension = "$($fullexportdirpath)\$($pagename)"
+                        $levelsprefix = "../"*($levelsfromroot+$pagelevel-1)+".."
+                    }
+                }
+                elseif ($global:activateSubDir -eq 1)
+                {
+                    $levelsprefix = "../"*($levelsfromroot)+".."
+                }
+            }
             # set media location (central media folder at notebook-level or adjacent to .md file) based on initial user prompt
             if ($medialocation -eq 2) {
                 $mediaPath = $fullexportdirpath
@@ -268,10 +282,10 @@ Function ProcessSections ($group, $FilePath) {
                 try {
                     $destfilename = ""
 
-                    if($globalFileName -eq 1) #Uses global file name to avoid naming problems
+                    if($global:activateGlobalFileName -eq 1) #Uses global file name to avoid naming problems
                     {
-                        $fileNameCount++
-                        $destfilename = "File-$($fileNameCount)$($pageinsertedfile.Extension)"
+                        $global:fileCount++
+                        $destfilename = "$($global:filePrefix)$($global:fileCount)$($pageinsertedfile.Extension)"
                     }
                     else {
                         $destfilename = $pageinsertedfile.InsertedFile.preferredName | Remove-InvalidFileNameCharsInsertedFiles    
@@ -304,7 +318,7 @@ Function ProcessSections ($group, $FilePath) {
             ")
             $insert2 = "---" 
 
-            if($mocForObsidian -eq 1)
+            if($global:activateMOCForObsidian -eq 1)
             {
                 Set-Content -Path "$($fullfilepathwithoutextension).md" -Value $orig[0..0], $insert1, $insert2, $insert2, $orig[6..$orig.Length]
             }
@@ -319,7 +333,7 @@ Function ProcessSections ($group, $FilePath) {
             }
             else {
                 try {
-                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace(">","").Replace("<","").Replace([char]0x00A0,[char]0x000A).Replace([char]0x000A,[char]0x000A).Replace("`r`n`r`n", "`r`n")) | Set-Content -Path "$($fullfilepathwithoutextension).md"                 }
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace(">","").Replace("<","").Replace([char]0x00A0,[char]0x000A).Replace([char]0x000A,[char]0x000A).Replace("`r`n`r`n", "`r`n")) | Set-Content -Path "$($fullfilepathwithoutextension).md"                  }
                 catch {
                     Write-Host "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())" -ForegroundColor Red
                     $totalerr += "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())`r`n"
@@ -333,10 +347,10 @@ Function ProcessSections ($group, $FilePath) {
             foreach ($image in $images) {
                 $newimageName = ""
 
-                if($globalFileName -eq 1) #Uses global file name to avoid naming problems
+                if($global:activateGlobalFileName -eq 1) #Uses global file name to avoid naming problems
                 {
-                    $fileNameCount++
-                    $newimageName = "File-$($fileNameCount)$($pageinsertedfile.Extension)"
+                    $global:fileCount++
+                    $newimageName = "$($global:filePrefix)$($global:fileCount)$($image.Extension)"
                 }
                 else {
                     $newimageName = "$($pagename.SubString(0,[math]::min(30,$pagename.length)))-$($image.BaseName)-$($timeStamp)$($image.Extension)"
@@ -391,66 +405,9 @@ Function ProcessSections ($group, $FilePath) {
                 Write-Host "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())" -ForegroundColor Red
                 $totalerr += "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())`r`n"
             }
-
-            # Resolve Links
-            if($keepLinks -ne 2)
-            {
-                try {
-                    # Section Links
-                    $reg = "(?=\[.*\(onenote:#section)(.*?)(?<=\.one\))"
-                    
-                    $secLinks = (Get-Content -path "$($fullfilepathwithoutextension).md" -Raw) | Select-String -Pattern "$($reg)" -AllMatches | %{$_.matches} | %{$_.Value}
-                    
-                    foreach($link in $secLinks)
-                    {
-                        $pattern = "(?<=\[)(.*?)(?=\])"
-                        $linkName = [regex]::Match($link,$pattern).Groups[1].Value | Remove-InvalidFileNameChars
-                        ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($link)", "[[$($linkName)]]")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
-                        
-                        $totalParsedLinkSection++
-                    }
-
-                    # Page and Paragraph links to page
-                    $reg = "(?=\[.*\(onenote:.*&section)(.*?)(?<=\.one\))"
-                    
-                    $secLinks = (Get-Content -path "$($fullfilepathwithoutextension).md" -Raw) | Select-String -Pattern "$($reg)" -AllMatches | %{$_.matches} | %{$_.Value}
-                    
-                    foreach($link in $secLinks)
-                    {
-                        $pattern = "(?<=\]\(onenote:#)(.*?)(?=&section-id)"
-                        $linkName = [regex]::Match($link,$pattern).Groups[1].Value
-
-                        $linkName = $linkName.Replace("%20", " ") | Remove-InvalidFileNameChars
-                        ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($link)", "[[$($linkName)]]")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
-                        
-                        $totalParsedPageAndParagraphSection++
-                    }
-
-                    # Unsesolved onenote links -> [[NAME]]
-                    $reg = "(?=\[)(.*?)(\]\(onenote:)(.*?)(?<=\))"
-                    
-                    $secLinks = (Get-Content -path "$($fullfilepathwithoutextension).md" -Raw) | Select-String -Pattern "$($reg)" -AllMatches | %{$_.matches} | %{$_.Value}
-                    
-                    foreach($link in $secLinks)
-                    {
-                        $pattern = "(?<=\[)(.*?)(?=\])"
-                        $linkName = [regex]::Match($link,$pattern).Groups[1].Value | Remove-InvalidFileNameChars
-
-                        $linkName = $linkName.Replace("%20", " ")
-                        ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($link)", "[[$($linkName)]]")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
-                        
-                        $totalParsedLinkDestinationUnresolved++
-                    }
-                }
-                catch
-                {
-                    Write-Host "Error resolving link '$($link)' for '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
-                    $totalerr += "Error resolving link '$($link)' for '$($page.name)': $($Error[0].ToString())`r`n"
-                }
-            }   
         }
 
-        if($mocForObsidian -eq 1)
+        if($global:activateMOCForObsidian -eq 1)
         {
             $sectionValue = $sectionValue + "`n---"
             New-Item -Path "$($FilePath)" -Name "$($sectionFileName).md" -ItemType "file" -Value "$($sectionValue)" -ErrorAction SilentlyContinue
@@ -459,7 +416,7 @@ Function ProcessSections ($group, $FilePath) {
 
     }
 
-    if($mocForObsidian -eq 1)
+    if($global:activateMOCForObsidian -eq 1)
     {
         $sectionGroupValue = $sectionGroupValue + "`n---"
         
@@ -467,8 +424,103 @@ Function ProcessSections ($group, $FilePath) {
     }
 }
 
-$fileNameCount = 0
-$recurrence = 1
+Function MatchLinkToFile ($notesdestpath, $link)
+{
+    $files = Get-ChildItem -Path $notesdestpath -Recurse -Include "$($link).md"
+
+    if (!$files)
+    {
+        $files = Get-ChildItem -Path $notesdestpath -Recurse -Include "*$($link)*.md"
+    }
+
+    if (!$files)
+    {
+        #Search without special chars
+        $searchTerm = $link -Replace "[^A-Za-z0-9]", '*'
+        $files = Get-ChildItem -Path $notesdestpath -Recurse -Include "*$($searchTerm)*.md"
+    }
+
+    if($files.Length -gt 0)
+    {
+        $global:parsedLinksMatched++
+
+        foreach ($file in $files) {
+            $link = $file.Name -replace ".md", ''
+            break
+        }
+
+        if(($files -is [array]) -and ($files.Length -gt 1))
+        {
+            $link = $link + "???"
+        }
+    }
+    else {
+        $link = ""
+        $global:parsedLinksNotMatched++
+    }
+    return $link
+}
+
+Function parseLinkForPattern($file, $linkExp, $nameExp)
+{
+    # Find links based on regex
+    $secLinks = (Get-Content -path $file.FullName -Raw) | Select-String -Pattern "$($linkExp)" -AllMatches | %{$_.matches} | %{$_.Value}
+            
+    foreach($link in $secLinks)
+    {
+        $linkName = [regex]::Match($link,$nameExp).Groups[1].Value | Remove-InvalidFileNameChars
+        $linkName = $linkName.Replace("%20", " ")
+        $linkName = MatchLinkToFile $notesdestpath $linkName
+
+        if ($linkName)
+        {
+            $append = ""
+
+            if ($linkName.Contains("???"))
+            {
+                $linkName = $linkName.Replace("???", '')
+                $append = " #LinkAmbiguous"
+            }
+            ((Get-Content -path $file.FullName -Raw).Replace("$($link)", "[[$($linkName)]]$($append)")) | Set-Content -Path $file.FullName
+        }
+        else {
+            ((Get-Content -path $file.FullName -Raw).Replace("$($link)", "$($link) #LinkNotResolved")) | Set-Content -Path $file.FullName -Encoding UTF8
+        }
+    }
+}
+
+Function ParseLinks($notesdestpath)
+{
+    $files = Get-ChildItem -Path $notesdestpath -Recurse -Include "*.md"
+
+    foreach ($file in $files) {
+        try {
+            # Section Links
+            $linkExp = "(?=\[.*\(onenote:#section)(.*?)(?<=\.one\))"
+            $nameExp = "(?<=\[)(.*?)(?=\])"
+            parseLinkForPattern $file $linkExp $nameExp
+
+            # Page and Paragraph links to page
+            $linkExp = "(?=\[.*\(onenote:.*&section)(.*?)(?<=\.one\))"
+            $nameExp = "(?<=\]\(onenote:#)(.*?)(?=&section-id)"
+            parseLinkForPattern $file $linkExp $nameExp
+            
+            # Unsesolved onenote links -> [[NAME]]
+            $linkExp = "(?=\[)(.*?)(\]\(onenote:)(.*?)(?<=\))"
+            $nameExp = "(?<=\[)(.*?)(?=\])"
+            parseLinkForPattern $file $linkExp $nameExp
+        }
+        catch
+        {
+            Write-Host "Error resolving link '$($link)' for '$($file.name)': $($Error[0].ToString())" -ForegroundColor Red
+            $totalerr += "Error resolving link '$($link)' for '$($file.name)': $($Error[0].ToString())`r`n"
+        }
+    }
+    Write-Host "Total links found`t:`t$($global:parsedLinksMatched + $global:parsedLinksNotMatched)"
+    Write-Host "`tMatched`t`t:`t$($global:parsedLinksMatched)"
+    Write-Host "`tNot matched`t:`t$($global:parsedLinksNotMatched)"
+}
+
 ""
 "-----------------------------------------------"
 # ask for the Notes root path
@@ -492,25 +544,69 @@ $notesdestpath = Read-Host -Prompt "Entry"
 [int] $keepdocx = Read-Host -Prompt "Entry"
 ""
 "-----------------------------------------------"
-# prompt for prefix vs subfolders
-"1: Create folders for subpages (e.g. Page\Subpage.md)- Default"
-"2: Add prefixes for subpages (e.g. Page_Subpage.md)"
-[Int]$prefixFolders = Read-Host -Prompt "Entry"
-if ($prefixFolders -eq 2) {
-    $prefixFolders = 2 
-    $prefixjoiner = "_"
+# prompt MOC for Obsidian
+"1: Use Map of Contents Structure - Default"
+"`t--For linking in Obsidian--"
+"`t`t- All files in the same folder"
+"`t`t- Pages for sections and section groups containing links to child pages/sections"
+"`t`t- Pages link to subpages (3 levels)"
+"2: Select other structure"
+[Int]$prefixFolders = 1
+[int]$medialocation = 1
+$optMOCForObsidian = Read-Host -Prompt "Entry"
+if ($optMOCForObsidian -ne 2) 
+{
+    $global:activateMOCForObsidian = 1
+    $global:activateSubDir = 0
+    $global:activateGlobalFileName = 1
+    $prefixFolders = 2
 }
 else {
-    $prefixFolders = 1
-    $prefixjoiner = "\"
+    $global:activateSubDir = 1
+    $global:activateGlobalFileName = 0
+    $global:activateMOCForObsidian = 0
 }
 
-#prompt for media in single or multiple folders
+if (!$global:activateMOCForObsidian)
+{
+    ""
+    "-----------------------------------------------"
+    # prompt for prefix vs subfolders
+    "1: Create folders for subpages (e.g. Page\Subpage.md)- Default"
+    "2: Add prefixes for subpages (e.g. Page_Subpage.md)"
+
+    $prefixFolders = Read-Host -Prompt "Entry"
+    if ($prefixFolders -eq 2) {
+        $prefixFolders = 2 
+        $prefixjoiner = "_"
+    }
+    else {
+        $prefixFolders = 1
+        $prefixjoiner = "\"
+        $global:activateSubDir = 1
+    }
+}
+
+if (!$global:activateMOCForObsidian)
+{
+    #prompt for media in single or multiple folders
+    ""
+    "-----------------------------------------------"
+    "1: Images stored in single 'media' folder at Notebook-level (Default)"
+    "2: Separate 'media' folder for each folder in the hierarchy"
+
+        $medialocation = Read-Host -Prompt "Entry"
+}
+
+#prompt for generic file naming
 ""
 "-----------------------------------------------"
-"1: Images stored in single 'media' folder at Notebook-level (Default)"
-"2: Separate 'media' folder for each folder in the hierarchy"
-[int] $medialocation = Read-Host -Prompt "Entry"
+"1: Use generic file names to avoid name errors (File-<Number>) - Default"
+"2: Maintain original file names"
+if((Read-Host -Prompt "Entry") -eq 2)
+{
+    $global:activateGlobalFileName = 0
+}
 
 #prompt for conversion type
 ""
@@ -544,9 +640,9 @@ else { $converter = "markdown"}
 
 # prompt to resolve links for obsidian 
 "-----------------------------------------------"
-"1: Resolve links for obsidian (beta)"
+"1: Resolve links (beta)"
 "2: Keep onenote links"
-[int] $keepLinks = Read-Host -Prompt "Entry"
+[int] $resolveLinks = Read-Host -Prompt "Entry"
 
 
 if (Test-Path -Path $notesdestpath) {
@@ -578,7 +674,7 @@ if (Test-Path -Path $notesdestpath) {
                 $sectiongroupFileName1 = "$($sectiongroup1.Name)" | Remove-InvalidFileNameChars
                 $sectiongroupFilePath1 = ""
                 
-                if ($subDir -eq 1)
+                if ($global:activateSubDir -eq 1)
                 {
                     New-Item -Path "$($notesdestpath)\$($notebookFileName)" -Name "$($sectiongroupFileName1)" -ItemType "directory" -ErrorAction SilentlyContinue 
                     $sectiongroupFilePath1 =  "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)"
@@ -589,7 +685,7 @@ if (Test-Path -Path $notesdestpath) {
                 
                 [string]$sectionGroup1Value = ""
 
-                if ($mocForObsidian -eq 1)
+                if ($global:activateMOCForObsidian -eq 1)
                 {
                     $sectionGroup1Value = (ProcessSections $sectiongroup1 $sectiongroupFilePath1)[-1]
                 }
@@ -606,7 +702,7 @@ if (Test-Path -Path $notesdestpath) {
                         $sectiongroupFileName2 = "$($sectiongroup2.Name)" | Remove-InvalidFileNameChars
                         $sectiongroupFilePath2 = ""
 
-                        if ($subDir -eq 1)
+                        if ($global:activateSubDir -eq 1)
                         {
                             New-Item -Path "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)" -Name "$($sectiongroupFileName2)" -ItemType "directory" -ErrorAction SilentlyContinue
                             $sectiongroupFilePath2 = "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)\$($sectiongroupFileName2)"
@@ -617,7 +713,7 @@ if (Test-Path -Path $notesdestpath) {
                         
                         [string]$sectionGroup2Value = ""
 
-                        if ($mocForObsidian -eq 1)
+                        if ($global:activateMOCForObsidian -eq 1)
                         {
                             $sectionGroup1Value = $sectionGroup1Value + "`n- [[$($sectiongroup2.Name)]]"
                             $sectionGroup2Value = (ProcessSections $sectiongroup2 $sectiongroupFilePath2)[-1]
@@ -635,7 +731,7 @@ if (Test-Path -Path $notesdestpath) {
                                 $sectiongroupFileName3 = "$($sectiongroup3.Name)" | Remove-InvalidFileNameChars
                                 $sectiongroupFilePath3 = ""
 
-                                if ($subDir -eq 1)
+                                if ($global:activateSubDir -eq 1)
                                 {
                                     New-Item -Path "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)\$($sectiongroupFileName2)" -Name "$($sectiongroupFileName3)" -ItemType "directory" -ErrorAction SilentlyContinue
                                     $sectiongroupFilePath3 = "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)\$($sectiongroupFileName2)\$($sectiongroupFileName3)"
@@ -646,7 +742,7 @@ if (Test-Path -Path $notesdestpath) {
 
                                 [string]$sectionGroup3Value = ""
                                 
-                                if ($mocForObsidian -eq 1)
+                                if ($global:activateMOCForObsidian -eq 1)
                                 {
                                     $sectionGroup2Value = $sectionGroup2Value + "`n- [[$($sectiongroup3.Name)]]"
                                     $sectionGroup3Value =  (ProcessSections $sectiongroup3 $sectiongroupFilePath3)[-1]
@@ -661,7 +757,7 @@ if (Test-Path -Path $notesdestpath) {
                                         $sectiongroupFileName4 = "$($sectiongroup4.Name)" | Remove-InvalidFileNameChars
                                         
                                         $sectiongroupFilePath4 = ""
-                                        if ($subDir -eq 1)
+                                        if ($global:activateSubDir -eq 1)
                                         {
                                             New-Item -Path "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)\$($sectiongroupFileName2)\$($sectiongroupFileName3)" -Name "$($sectiongroupFileName4)" -ItemType "directory" -ErrorAction SilentlyContinue
                                             $sectiongroupFilePath4 = "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)\$($sectiongroupFileName2)\$($sectiongroupFileName3)\$($sectiongroupFileName4)"
@@ -672,7 +768,7 @@ if (Test-Path -Path $notesdestpath) {
 
                                         [string]$sectionGroup4Value = ""
                                 
-                                        if ($mocForObsidian -eq 1)
+                                        if ($global:activateMOCForObsidian -eq 1)
                                         {
                                             $sectionGroup3Value = $sectionGroup3Value + "`n- [[$($sectiongroup4.Name)]]"
                                             $sectionGroup4Value =  (ProcessSections $sectiongroup4 $sectiongroupFilePath4)[-1]
@@ -688,7 +784,7 @@ if (Test-Path -Path $notesdestpath) {
                                                 "#### " + $sectiongroup5.Name
                                                 $sectiongroupFileName5 = "$($sectiongroup5.Name)" | Remove-InvalidFileNameChars
                                                 $sectiongroupFilePath5 = ""
-                                                if ($subDir -eq 1)
+                                                if ($global:activateSubDir -eq 1)
                                                 {
                                                     New-Item -Path "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)\$($sectiongroupFileName2)\$($sectiongroupFileName3)\$($sectiongroupFileName4)" -Name "$($sectiongroupFileName5)" -ItemType "directory" -ErrorAction SilentlyContinue
                                                     $sectiongroupFilePath5 = "$($notesdestpath)\$($notebookFileName)\$($sectiongroupFileName1)\$($sectiongroupFileName2)\$($sectiongroupFileName3)\$($sectiongroupFileName4)\\$($sectiongroupFileName5)"
@@ -699,7 +795,7 @@ if (Test-Path -Path $notesdestpath) {
 
                                                 [string]$sectionGroup5Value = ""
                                         
-                                                if ($mocForObsidian -eq 1)
+                                                if ($global:activateMOCForObsidian -eq 1)
                                                 {
                                                     $sectionGroup4Value = $sectionGroup4Value + "`n- [[$($sectiongroup5.Name)]]"
                                                     $sectionGroup5Value =  (ProcessSections $sectiongroup5 $sectiongroupFilePath5)[-1]
@@ -710,45 +806,45 @@ if (Test-Path -Path $notesdestpath) {
                                             }
                                         }
                                         
-                                        if ($mocForObsidian -eq 1)
+                                        if ($global:activateMOCForObsidian -eq 1)
                                         {
                                             New-Item -Path "$($notesdestpath)" -Name "$($sectiongroupFileName4).md" -ItemType "file" -Value "$($sectionGroup4Value)" -ErrorAction SilentlyContinue  
                                         }
                                     }
                                 }
-                                if ($mocForObsidian -eq 1)
+                                if ($global:activateMOCForObsidian -eq 1)
                                 {
                                     New-Item -Path "$($notesdestpath)" -Name "$($sectiongroupFileName3).md" -ItemType "file" -Value "$($sectionGroup3Value)" -ErrorAction SilentlyContinue
                                 }
                             }
                         }
-                        if ($mocForObsidian -eq 1)
+                        if ($global:activateMOCForObsidian -eq 1)
                         {
                             New-Item -Path "$($notesdestpath)" -Name "$($sectiongroupFileName2).md" -ItemType "file" -Value "$($sectionGroup2Value)" -ErrorAction SilentlyContinue
                         }
                     }
                 }
-                if ($mocForObsidian -eq 1)
+                if ($global:activateMOCForObsidian -eq 1)
                 {
                     New-Item -Path "$($sectiongroupFilePath1)" -Name "$($sectiongroupFileName1).md" -ItemType "file" -Value "$($sectionGroup1Value)" -ErrorAction SilentlyContinue
                 }
             }
         }        
     }
+
+    #Parse links
+    if($resolveLinks -ne 2)
+    {
+        parseLinks $notesdestpath
+    }
     
+
     # release OneNote hierarchy
     [System.Runtime.Interopservices.Marshal]::ReleaseComObject($OneNote)
     Remove-Variable OneNote
     $totalerr
 
-    #Show links
-    if ($keepLinks -ne 2)
-    {
-        Write-Host "Parsed links for Section: $($totalParsedLinkSection)"
-        Write-Host "Parsed links for Paragraph and Page (all converted to Page-Links): $($totalParsedPageAndParagraphSection)"
-        Write-Host "Parsed links for unnokw destination (Link label parsed only) : $($totalParsedLinkDestinationUnresolved)"
-        $totalLinks
-    }
+    
 }
 else {
 Write-Host "This path is NOT valid"

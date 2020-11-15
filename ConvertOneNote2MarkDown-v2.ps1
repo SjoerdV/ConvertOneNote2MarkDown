@@ -159,11 +159,11 @@ Function ProcessSections ($group, $FilePath) {
                     if ($global:activateMOCForObsidian -eq 1)
                     {
                         # Set links to subpages
-                        $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel1).md"
+                        $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel1).md" -encoding utf8
                         $subpagelinks = $subpagelinks + "- [[$($page.name)]]"
                         $init = 3+$subpagelinkcountlevel1
                         $ende = $init+1
-                        Set-Content -Path "$($fullexportdirpath)\$($previouspagenamelevel1).md" -Value $orig[0..$init], $subpagelinks, $orig[$ende..$orig.Length]
+                        Set-Content -Path "$($fullexportdirpath)\$($previouspagenamelevel1).md" -Value $orig[0..$init], $subpagelinks, $orig[$ende..$orig.Length] -encoding utf8
                         
                         $subpagelinkcountlevel1++
                     }
@@ -183,11 +183,11 @@ Function ProcessSections ($group, $FilePath) {
                     if ($global:activateMOCForObsidian -eq 1)
                     {
                         # Set links to subpages
-                        $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel2).md"
+                        $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel2).md" -encoding utf8
                         $subpagelinks = $subpagelinks + "- [[$($page.name)]]"
                         $init = 3+$subpagelinkcountlevel2
                         $ende = $init+1
-                        Set-Content -Path "$($fullexportdirpath)\$($previouspagenamelevel2).md" -Value $orig[0..$init], $subpagelinks, $orig[$ende..$orig.Length]
+                        Set-Content -Path "$($fullexportdirpath)\$($previouspagenamelevel2).md" -Value $orig[0..$init], $subpagelinks, $orig[$ende..$orig.Length] -encoding utf8
                     
                         $subpagelinkcountlevel2++
                     }
@@ -300,7 +300,7 @@ Function ProcessSections ($group, $FilePath) {
                 # Change MD file Object Name References
                 try {
                     $pageinsertedfile2 = $pageinsertedfile.InsertedFile.preferredName.Replace("$","\$").Replace("^","\^").Replace("'","\'")                                
-                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($pageinsertedfile2)", "[$($destfilename)]($($mediaPath)/media/$($destfilename))")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace("$($pageinsertedfile2)", "[$($destfilename)]($($mediaPath)/media/$($destfilename))")) | Set-Content -Path "$($fullfilepathwithoutextension).md" -encoding utf8
 
                 }
                 catch {
@@ -310,7 +310,7 @@ Function ProcessSections ($group, $FilePath) {
             }
             
             # add YAML
-            $orig = Get-Content -path "$($fullfilepathwithoutextension).md"
+            $orig = Get-Content -path "$($fullfilepathwithoutextension).md" -encoding utf8
             $orig[0] = "# $($page.name)"
             $insert1 = "$($page.dateTime)"
             $insert1 =[Datetime]::ParseExact($insert1, 'yyyy-MM-ddTHH:mm:ss.fffZ', $null)
@@ -320,10 +320,10 @@ Function ProcessSections ($group, $FilePath) {
 
             if($global:activateMOCForObsidian -eq 1)
             {
-                Set-Content -Path "$($fullfilepathwithoutextension).md" -Value $orig[0..0], $insert1, $insert2, $insert2, $orig[6..$orig.Length]
+                Set-Content -Path "$($fullfilepathwithoutextension).md" -Value $orig[0..0], $insert1, $insert2, $insert2, $orig[6..$orig.Length] -encoding utf8
             }
             else {
-                Set-Content -Path "$($fullfilepathwithoutextension).md" -Value $orig[0..0], $insert1, $insert2, $orig[6..$orig.Length]    
+                Set-Content -Path "$($fullfilepathwithoutextension).md" -Value $orig[0..0], $insert1, $insert2, $orig[6..$orig.Length] -encoding utf8    
             }
             
             
@@ -333,7 +333,7 @@ Function ProcessSections ($group, $FilePath) {
             }
             else {
                 try {
-                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace(">","").Replace("<","").Replace([char]0x00A0,[char]0x000A).Replace([char]0x000A,[char]0x000A).Replace("`r`n`r`n", "`r`n")) | Set-Content -Path "$($fullfilepathwithoutextension).md"                  }
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace(">","").Replace("<","").Replace([char]0x00A0,[char]0x000A).Replace([char]0x000A,[char]0x000A).Replace("`r`n`r`n", "`r`n")) | Set-Content -Path "$($fullfilepathwithoutextension).md" -encoding utf8                  }
                 catch {
                     Write-Host "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())" -ForegroundColor Red
                     $totalerr += "Error while clearing double spaces from file '$($fullfilepathwithoutextension)' : $($Error[0].ToString())`r`n"
@@ -366,7 +366,7 @@ Function ProcessSections ($group, $FilePath) {
                 }
                 # Change MD file Image filename References
                 try {
-                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($image.Name)", "$($newimageName)")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                    ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace("$($image.Name)", "$($newimageName)")) | Set-Content -Path "$($fullfilepathwithoutextension).md" -encoding utf8
                 }
                 catch {
                     Write-Host "Error while renaming image file name references to '$($image.Name)' for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
@@ -377,9 +377,9 @@ Function ProcessSections ($group, $FilePath) {
             # change MD file Image Path References
             try {
                 # Change MD file Image Path References in Markdown
-                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($mediaPath.Replace("\","\\"))", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace("$($mediaPath.Replace("\","\\"))", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md" -encoding utf8
                 # Change MD file Image Path References in HTML
-                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("$($mediaPath)", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace("$($mediaPath)", "$($levelsprefix)")) | Set-Content -Path "$($fullfilepathwithoutextension).md" -encoding utf8
             }
             catch {
                 Write-Host "Error while renaming image file path references for file '$($page.name)': $($Error[0].ToString())" -ForegroundColor Red
@@ -391,7 +391,7 @@ Function ProcessSections ($group, $FilePath) {
                 #do nothing
             }
             else {
-                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw).Replace("\",'')) | Set-Content -Path "$($fullfilepathwithoutextension).md"
+                ((Get-Content -path "$($fullfilepathwithoutextension).md" -Raw -encoding utf8).Replace("\",'')) | Set-Content -Path "$($fullfilepathwithoutextension).md" -encoding utf8
             }
 
             # Cleanup Word files
@@ -464,7 +464,7 @@ Function MatchLinkToFile ($notesdestpath, $link)
 Function parseLinkForPattern($file, $linkExp, $nameExp)
 {
     # Find links based on regex
-    $secLinks = (Get-Content -path $file.FullName -Raw) | Select-String -Pattern "$($linkExp)" -AllMatches | %{$_.matches} | %{$_.Value}
+    $secLinks = (Get-Content -path $file.FullName -Raw -encoding utf8) | Select-String -Pattern "$($linkExp)" -AllMatches | %{$_.matches} | %{$_.Value}
             
     foreach($link in $secLinks)
     {
@@ -481,10 +481,10 @@ Function parseLinkForPattern($file, $linkExp, $nameExp)
                 $linkName = $linkName.Replace("???", '')
                 $append = " #LinkAmbiguous"
             }
-            ((Get-Content -path $file.FullName -Raw).Replace("$($link)", "[[$($linkName)]]$($append)")) | Set-Content -Path $file.FullName
+            ((Get-Content -path $file.FullName -Raw -encoding utf8).Replace("$($link)", "[[$($linkName)]]$($append)")) | Set-Content -Path $file.FullName -encoding utf8
         }
         else {
-            ((Get-Content -path $file.FullName -Raw).Replace("$($link)", "$($link) #LinkNotResolved")) | Set-Content -Path $file.FullName -Encoding UTF8
+            ((Get-Content -path $file.FullName -Raw -encoding utf8).Replace("$($link)", "$($link) #LinkNotResolved")) | Set-Content -Path $file.FullName -Encoding UTF8
         }
     }
 }

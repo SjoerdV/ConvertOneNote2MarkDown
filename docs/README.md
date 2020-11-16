@@ -27,6 +27,10 @@ An extension of [@nixsee's script](https://github.com/nixsee/ConvertOneNote2Mark
  * Resolve **oneNote links** into **markdown links**
  * Not resolved links will be appended with a tag *#LinkNotResolved*, so you can track and resolve them manually
  * Ambiguous links will be resolved, but will receive a tag *#LinkAmbiguous*, so you can check them out
+ 
+ ### Correct Unicode issues
+ * As german / portuguese / english writer, i had a lot of problems with special characters
+ * Obsidian had a problem with unicode files, which was resolved by writing them in UTF-8 format
 
 # Convert OneNote to MarkDown
 ## Summary

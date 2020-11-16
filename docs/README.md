@@ -1,19 +1,34 @@
 ---
-title:  'Convert OneNote to MarkDown'
+title:  'Convert OneNote to MarkDown for Obsidian'
 author:
 - Sjoerd de Valk, SPdeValk Consultancy
 - modified by nixsee, a guy
-date: 2020-07-15 13:00:00
-keywords: [migration, tooling, onenote, markdown, powershell]
+- modified by rab-it
+date: 2020-16-11 10:41:00
+keywords: [migration, tooling, onenote, markdown, powershell, obsidian]
 abstract: |
-  This document is about converting your OneNote data to Markdown format.
+  This document is about converting your OneNote data to Markdown format, optimized for obsidian users.
 permalink: /index.html
 ---
 
-Credit for this script goes to the wizard @SjoerdV who created the original script [here](https://github.com/SjoerdV/ConvertOneNote2MarkDown). I've taken it and made a variety of modifications and improvements.
+# Convert OneNote to MarkDown for Obsidian
+
+An extension of [@nixsee's script](https://github.com/nixsee/ConvertOneNote2MarkDown) that i've made while migrating from OneNote to Obsidian.
+
+## Added Features 
+### MOC for Obsidian
+* **MOC** - Map of Contents
+* Creates a **flat structure** of files 
+  * It will be generated **one folder per notebook** where it's contents will be stored in a flat structure
+  * A **MOC markdown file** will be generated for each **notebook**, **section group**, **group** containing links to child objects (**section groups**, **groups**, **pages**)
+  * Each **page** containing **subpages** will receive a **header with links to it's subpages**
+ 
+ ### Resolve Links to Markdown
+ * Resolve **oneNote links** into **markdown links**
+ * Not resolved links will be appended with a tag *#LinkNotResolved*, so you can track and resolve them manually
+ * Ambiguous links will be resolved, but will receive a tag *#LinkAmbiguous*, so you can check them out
 
 # Convert OneNote to MarkDown
-
 ## Summary
 
 Ready to make the step to Markdown and saying farewell to your OneNote, EverNote or whatever proprietary note taking tool you are using? Nothing beats clear text, right? Read on!

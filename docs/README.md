@@ -29,7 +29,7 @@ An extension of [@nixsee's script](https://github.com/nixsee/ConvertOneNote2Mark
  * Ambiguous links will be resolved, but will receive a tag *#LinkAmbiguous*, so you can check them out
  
  ### Correct Unicode issues
- * As german / portuguese / english writer, i had a lot of problems with special characters
+ * As a german / portuguese / english writer, I had a lot of problems with special characters
  * Obsidian had a problem with unicode files, which was resolved by writing them in UTF-8 format
 
 # Convert OneNote to MarkDown

@@ -176,7 +176,7 @@ Function ProcessSections ($group, $FilePath) {
                     {
                         # Set links to subpages
                         $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel1).md" -encoding utf8
-                        $subpagelinks = $subpagelinks + "- [[$($page.name)]]"
+                        $subpagelinks = $subpagelinks + "- [[$($pagename)]]"
                         $init = 3+$subpagelinkcountlevel1
                         $ende = $init+1
                         Set-Content -Path "$($fullexportdirpath)\$($previouspagenamelevel1).md" -Value $orig[0..$init], $subpagelinks, $orig[$ende..$orig.Length] -encoding utf8
@@ -200,7 +200,7 @@ Function ProcessSections ($group, $FilePath) {
                     {
                         # Set links to subpages
                         $orig = Get-Content -path "$($fullexportdirpath)\$($previouspagenamelevel2).md" -encoding utf8
-                        $subpagelinks = $subpagelinks + "- [[$($page.name)]]"
+                        $subpagelinks = $subpagelinks + "- [[$($pagename)]]"
                         $init = 3+$subpagelinkcountlevel2
                         $ende = $init+1
                         Set-Content -Path "$($fullexportdirpath)\$($previouspagenamelevel2).md" -Value $orig[0..$init], $subpagelinks, $orig[$ende..$orig.Length] -encoding utf8
@@ -538,14 +538,14 @@ Function parseLinkForPattern($file, $linkExp, $nameExp)
             if ($linkName.Contains("???"))
             {
                 $linkName = $linkName.Replace("???", '')
-                $append = " #LinkAmbiguous"
+                $append = "#LinkAmbiguous"
                 $global:parsedLinksAmbiguousMatched++
             }
             else {
                 $global:parsedLinksMatched++
             }
 
-            ((Get-Content -path $file.FullName -Raw -encoding utf8).Replace("$($link)", "[[$($linkName)]]$($append)")) | Set-Content -Path $file.FullName -encoding utf8
+            ((Get-Content -path $file.FullName -Raw -encoding utf8).Replace("$($link)", "[[$($linkName)]] $($append)")) | Set-Content -Path $file.FullName -encoding utf8
         }
         elseif($nameExp){
             ((Get-Content -path $file.FullName -Raw -encoding utf8).Replace("$($link)", "$($link) #LinkNotResolved")) | Set-Content -Path $file.FullName -Encoding UTF8
@@ -794,7 +794,7 @@ if (Test-Path -Path $notesdestpath) {
 
                         if ($global:activateMOCForObsidian -eq 1)
                         {
-                            $sectionGroup1Value = $sectionGroup1Value + "`n- [[$($sectiongroup2.Name)]]"
+                            $sectionGroup1Value = $sectionGroup1Value + "`n- [[$($sectiongroupFileName2)]]"
                             $sectionGroup2Value = (ProcessSections $sectiongroup2 $sectiongroupFilePath2)[-1]
                         }
                         else {
@@ -823,7 +823,7 @@ if (Test-Path -Path $notesdestpath) {
                                 
                                 if ($global:activateMOCForObsidian -eq 1)
                                 {
-                                    $sectionGroup2Value = $sectionGroup2Value + "`n- [[$($sectiongroup3.Name)]]"
+                                    $sectionGroup2Value = $sectionGroup2Value + "`n- [[$($sectiongroupFileName3)]]"
                                     $sectionGroup3Value =  (ProcessSections $sectiongroup3 $sectiongroupFilePath3)[-1]
                                 }
                                 ProcessSections $sectiongroup3 $sectiongroupFilePath3
@@ -849,7 +849,7 @@ if (Test-Path -Path $notesdestpath) {
                                 
                                         if ($global:activateMOCForObsidian -eq 1)
                                         {
-                                            $sectionGroup3Value = $sectionGroup3Value + "`n- [[$($sectiongroup4.Name)]]"
+                                            $sectionGroup3Value = $sectionGroup3Value + "`n- [[$($sectiongroupFileName4)]]"
                                             $sectionGroup4Value =  (ProcessSections $sectiongroup4 $sectiongroupFilePath4)[-1]
                                         }
                                         else {
@@ -876,7 +876,7 @@ if (Test-Path -Path $notesdestpath) {
                                         
                                                 if ($global:activateMOCForObsidian -eq 1)
                                                 {
-                                                    $sectionGroup4Value = $sectionGroup4Value + "`n- [[$($sectiongroup5.Name)]]"
+                                                    $sectionGroup4Value = $sectionGroup4Value + "`n- [[$($sectiongroupFileName5)]]"
                                                     $sectionGroup5Value =  (ProcessSections $sectiongroup5 $sectiongroupFilePath5)[-1]
                                                 }
                                                 else {

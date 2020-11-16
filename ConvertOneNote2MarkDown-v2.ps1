@@ -13,6 +13,10 @@
 
 [int]$global:parsedLinksMatched = 0
 [int]$global:parsedLinksNotMatched = 0
+$global:parsedLinksAmbiguousMatched = 0
+
+$global:PageIdArray = [System.Collections.ArrayList]::new()
+$global:PageValueArray = [System.Collections.ArrayList]::new()
 
 #Functions
 Function Remove-InvalidFileNameChars {
@@ -67,14 +71,26 @@ Function Remove-InvalidFileNameCharsInsertedFiles {
     return ($newName -replace $rePattern,"" -replace "\s","$($global:SpaceChar)")
 }
   
+Function saveHyperlinkToObject($object, $name)
+{
+    $link = ""
+    $OneNote.GetHyperLinkToObject($object.ID, "", [ref]$link)
+
+    if ($link -and $name)
+    {
+        $global:PageIdArray.add($name)
+        $global:PageValueArray.add($link)
+    }
+}
 Function ProcessSections ($group, $FilePath) {
     [string]$sectionGroupValue
     
     if ($global:activateMOCForObsidian -eq 1) #Header for section group moc file
     {
         [string]$sectionGroupValue = "# $($group.Name)`n`n---"
+        saveHyperlinkToObject $group ($group.Name | Remove-InvalidFileNameChars)
     }
-    
+
     foreach ($section in $group.Section) {
         "--------------"
         "### " + $section.Name
@@ -146,7 +162,7 @@ Function ProcessSections ($group, $FilePath) {
 
                 if ($global:activateMOCForObsidian -eq 1)
                 {
-                    $sectionValue = $sectionValue + "`n- [[$($page.name)]]"
+                    $sectionValue = $sectionValue + "`n- [[$($pagename)]]"
                 }
             }
             elseif ($pagelevel -eq 2) {
@@ -215,6 +231,9 @@ Function ProcessSections ($group, $FilePath) {
                     $levelsprefix = "../"*($levelsfromroot)+".."
                 }
             }
+
+            saveHyperlinkToObject $page $pagename
+
             # set media location (central media folder at notebook-level or adjacent to .md file) based on initial user prompt
             if ($medialocation -eq 2) {
                 $mediaPath = $fullexportdirpath
@@ -411,7 +430,8 @@ Function ProcessSections ($group, $FilePath) {
         {
             $sectionValue = $sectionValue + "`n---"
             New-Item -Path "$($FilePath)" -Name "$($sectionFileName).md" -ItemType "file" -Value "$($sectionValue)" -ErrorAction SilentlyContinue
-            $sectionGroupValue = $sectionGroupValue + "`n- [[$($section.name)]]"
+            $sectionGroupValue = $sectionGroupValue + "`n- [[$($sectionFileName)]]"
+            saveHyperlinkToObject $section $sectionFileName
         }  
 
     }
@@ -422,6 +442,24 @@ Function ProcessSections ($group, $FilePath) {
         
         return $sectionGroupValue
     }
+}
+
+Function FindNameById($objId, $idEx)
+{
+    $i = 0
+    foreach ($element in $PageValueArray)
+    {
+        $thisLinkObjId = [regex]::Match($element, $idEx).Groups[1].Value
+        if($objId)
+        {
+            if ($objId -eq $thisLinkObjId)
+            {
+                return $PageIdArray[$i]
+            }
+        }
+        $i++
+    }
+    return ""
 }
 
 Function MatchLinkToFile ($notesdestpath, $link)
@@ -442,8 +480,6 @@ Function MatchLinkToFile ($notesdestpath, $link)
 
     if($files.Length -gt 0)
     {
-        $global:parsedLinksMatched++
-
         foreach ($file in $files) {
             $link = $file.Name -replace ".md", ''
             break
@@ -456,7 +492,6 @@ Function MatchLinkToFile ($notesdestpath, $link)
     }
     else {
         $link = ""
-        $global:parsedLinksNotMatched++
     }
     return $link
 }
@@ -468,23 +503,53 @@ Function parseLinkForPattern($file, $linkExp, $nameExp)
             
     foreach($link in $secLinks)
     {
-        $linkName = [regex]::Match($link,$nameExp).Groups[1].Value | Remove-InvalidFileNameChars
-        $linkName = $linkName.Replace("%20", " ")
-        $linkName = MatchLinkToFile $notesdestpath $linkName
+        #$url = [regex]::Match($link,"(?=onenote:)(.*?)(?=\))").Groups[1].Value
+        $LinkPageId = [regex]::Match($link,"(?<=page-id={)(.*?)(?=})").Groups[1].Value
+        #$LinkSectionId = [regex]::Match($link,"(?<=section-id={)(.*?)(?=})").Groups[1].Value
+        #$linkObjectId = [regex]::Match($link,"(?<=object-id={)(.*?)(?=})").Groups[1].Value
+        #$LinkBasePath = [regex]::Match($link,"(?<=base-path=)(.*?)(?=\))").Groups[1].Value
+        
+        $linkName = ""
+
+        #Find usig object ids
+        if ($LinkPageId)
+        {
+            $linkName = FindNameById $LinkPageId "(?<=page-id={)(.*?)(?=})"
+        }
+
+        if($linkName)
+        {
+            $linkName = $linkName | Remove-InvalidFileNameChars
+        }
+
+        #Find using file search
+        if(!$linkName -and $linkExp -and $nameExp)
+        {
+            $linkName = [regex]::Match($link,$nameExp).Groups[1].Value | Remove-InvalidFileNameChars
+            $linkName = $linkName.Replace("%20", " ")
+            $linkName = MatchLinkToFile $notesdestpath $linkName
+        }
 
         if ($linkName)
         {
             $append = ""
+            $global:parsedLinksMatched++
 
             if ($linkName.Contains("???"))
             {
                 $linkName = $linkName.Replace("???", '')
                 $append = " #LinkAmbiguous"
+                $global:parsedLinksAmbiguousMatched++
             }
+            else {
+                $global:parsedLinksMatched++
+            }
+
             ((Get-Content -path $file.FullName -Raw -encoding utf8).Replace("$($link)", "[[$($linkName)]]$($append)")) | Set-Content -Path $file.FullName -encoding utf8
         }
-        else {
+        elseif($nameExp){
             ((Get-Content -path $file.FullName -Raw -encoding utf8).Replace("$($link)", "$($link) #LinkNotResolved")) | Set-Content -Path $file.FullName -Encoding UTF8
+            $global:parsedLinksNotMatched++
         }
     }
 }
@@ -495,6 +560,11 @@ Function ParseLinks($notesdestpath)
 
     foreach ($file in $files) {
         try {
+            # All onenote Links
+            $linkExp = "(?=\[.*\]\(onenote:)(.*?)(?<=\.one\))"
+            $nameExp = ""
+            parseLinkForPattern $file $linkExp $nameExp
+
             # Section Links
             $linkExp = "(?=\[.*\(onenote:#section)(.*?)(?<=\.one\))"
             $nameExp = "(?<=\[)(.*?)(?=\])"
@@ -512,12 +582,13 @@ Function ParseLinks($notesdestpath)
         }
         catch
         {
-            Write-Host "Error resolving link '$($link)' for '$($file.name)': $($Error[0].ToString())" -ForegroundColor Red
-            $totalerr += "Error resolving link '$($link)' for '$($file.name)': $($Error[0].ToString())`r`n"
+            Write-Host "Error resolving links for '$($file.name)': $($Error[0].ToString())" -ForegroundColor Red
+            $totalerr += "Error resolving links for '$($file.name)': $($Error[0].ToString())`r`n"
         }
     }
-    Write-Host "Total links found`t:`t$($global:parsedLinksMatched + $global:parsedLinksNotMatched)"
+    Write-Host "Total links found`t:`t$($global:parsedLinksMatched + $global:parsedLinksNotMatched + $global:parsedLinksAmbiguousMatched)"
     Write-Host "`tMatched`t`t:`t$($global:parsedLinksMatched)"
+    Write-Host "`tAmbiguous`t:`t$($global:parsedLinksAmbiguousMatched)"
     Write-Host "`tNot matched`t:`t$($global:parsedLinksNotMatched)"
 }
 
@@ -837,14 +908,11 @@ if (Test-Path -Path $notesdestpath) {
     {
         parseLinks $notesdestpath
     }
-    
 
     # release OneNote hierarchy
     [System.Runtime.Interopservices.Marshal]::ReleaseComObject($OneNote)
     Remove-Variable OneNote
     $totalerr
-
-    
 }
 else {
 Write-Host "This path is NOT valid"

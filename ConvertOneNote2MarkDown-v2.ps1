@@ -733,9 +733,17 @@ if (Test-Path -Path $notesdestpath) {
        
         New-Item -Path "$($NotebookFilePath)" -Name "docx" -ItemType "directory" -ErrorAction SilentlyContinue
 
+        $notebookContent = ""
+
         "=============="
         #process any sections that are not in a section group
-        ProcessSections $notebook $NotebookFilePath
+        if ($global:activateMOCForObsidian -eq 1)
+        {
+            $notebookContent = (ProcessSections $notebook $NotebookFilePath)[-1]
+        }
+        else {
+            ProcessSections $notebook $NotebookFilePath
+        }
         
         #start looping through any top-level section groups in the notebook
         foreach ($sectiongroup1 in $notebook.SectionGroup) {
@@ -898,9 +906,16 @@ if (Test-Path -Path $notesdestpath) {
                 if ($global:activateMOCForObsidian -eq 1)
                 {
                     New-Item -Path "$($sectiongroupFilePath1)" -Name "$($sectiongroupFileName1).md" -ItemType "file" -Value "$($sectionGroup1Value)" -ErrorAction SilentlyContinue
+                    $notebookContent = $notebookContent + "`n- [[$($sectiongroupFileName1)]]"
                 }
             }
-        }        
+        } 
+        
+        if ($global:activateMOCForObsidian -eq 1)
+        {
+            $notebookContent = $notebookContent + "`n---"
+            New-Item -Path "$($NotebookFilePath)" -Name "$($notebookFileName).md" -ItemType "file" -Value "$($notebookContent)" -ErrorAction SilentlyContinue
+        }
     }
 
     #Parse links

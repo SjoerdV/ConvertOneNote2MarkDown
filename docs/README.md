@@ -9,7 +9,12 @@ abstract: |
   This document is about converting your OneNote data to Markdown format.
 permalink: /index.html
 ---
-[![GitHub All Releases](https://img.shields.io/github/downloads/SjoerdV/ConvertOneNote2MarkDown/total.svg)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/releases)
+[![GitHub License](https://img.shields.io/github/license/SjoerdV/ConvertOneNote2MarkDown)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/blob/master/docs/LICENSE)
+![GitHub All Views](https://counter.gofiber.io/badge/SjoerdV/ConvertOneNote2MarkDown?unique=true)
+[![GitHub All Stars](https://img.shields.io/github/stars/SjoerdV/ConvertOneNote2MarkDown?label=stars)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/stargazers)
+[![GitHub All Forks](https://img.shields.io/github/forks/SjoerdV/ConvertOneNote2MarkDown?label=forks)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/network/members)
+[![GitHub Latest Release](https://img.shields.io/github/v/release/SjoerdV/ConvertOneNote2MarkDown?include_prereleases&color=red)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/releases)
+[![GitHub All Downloads](https://img.shields.io/github/downloads/SjoerdV/ConvertOneNote2MarkDown/total?label=downloads)](https://github.com/SjoerdV/ConvertOneNote2MarkDown/releases)
 
 ## Convert OneNote to MarkDown
 
@@ -30,7 +35,7 @@ The PowerShell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 1. Password protected sections should be unlocked before continuing, the Object Model does not have access to them if you don't
 1. Section Groups on the first level are listed but are ignored. Nested Section Groups are not processed at all.
     * Recommendation: if you make heavy use of (Nested) Section Groups you first have to reorganize in a way that they are out of the picture. Usually creating a new Notebook named the same as your Section Group and moving all relevant Sections.
-1. You should start by 'flattening' all pen/hand written elements in your onennote pages. Because OneNote does not have this function you will have to take screenshots of your pages with pen/hand written notes and paste the resulting image and then remove the scriblings. If you are a heavy 'pen' user this is a very cumbersome. **If you have an automated solution for this, please let me know**
+1. You should start by 'flattening' all pen/hand written elements in your OneNote pages. Because OneNote does not have this function you will have to take screenshots of your pages with pen/hand written notes and paste the resulting image and then remove the scribblings. If you are a heavy 'pen' user this is a very cumbersome. **If you have an automated solution for this, please let me know**
 1. Relative paths can not be used as input for the target folder. Always use an absolute path (ex. 'c:\temp\notes').
 1. This script uses only absolute paths internally, mainly because pandoc on Windows has trouble processing relative paths and for consistency. This will not be changed.
 1. While running the conversion OneNote will be unusable and it is recommended to 'walk away' and have some coffee as the Object Model might be interrupted if you do anything else.
@@ -53,7 +58,7 @@ The PowerShell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 
 ### Installation
 
-Clone this repository to acquire the powershell script.
+Clone this repository to acquire the PowerShell script.
 
 ### Usage
 
@@ -80,18 +85,20 @@ If you are satisfied check the results with a markdown editor like VSCode. All i
 1. I would like to recommend this repository [VSCodeNotebook](https://github.com/aviaryan/VSCodeNotebook) to host your resulting Markdown Notes folder structure. This solution supports encrypting sensitive (markdown) files and works quite nicely.
 1. While working with markdown in VSCode these are the extensions I like using:
 
-```powershell
-    .\code `
-    --install-extension davidanson.vscode-markdownlint `
-    --install-extension ms-vscode.powershell-preview `
-    --install-extension jebbs.markdown-extended `
-    --install-extension telesoho.vscode-markdown-paste-image `
-    --install-extension redhat.vscode-yaml `
-    --install-extension vscode-icons-team.vscode-icons `
-    --install-extension ms-vsts.team
-```
+    ```powershell
+        .\code `
+        --install-extension davidanson.vscode-markdownlint `
+        --install-extension ms-vscode.powershell-preview `
+        --install-extension jebbs.markdown-extended `
+        --install-extension telesoho.vscode-markdown-paste-image `
+        --install-extension redhat.vscode-yaml `
+        --install-extension vscode-icons-team.vscode-icons `
+        --install-extension ms-vsts.team
+    ```
 
-> NOTE: The bottom three are not really markdown related but are quite obvious.
+    > NOTE: The bottom three are not really markdown related but are quite obvious.
+
+1. Interesting [forks](https://github.com/SjoerdV/ConvertOneNote2MarkDown/network/members) have been developed you might want to take a look at. Especially the one for an Obsidian target made by @rab-bit.
 
 ### Changelog
 

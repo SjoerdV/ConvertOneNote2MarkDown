@@ -21,7 +21,7 @@ if (Test-Path -Path $notesdestpath) {
   $OneNote.GetHierarchy("", [Microsoft.Office.InterOp.OneNote.HierarchyScope]::hsPages, [ref]$Hierarchy)
 
   foreach ($notebook in $Hierarchy.Notebooks.Notebook) {
-    #if ($notebook.Name -eq "KW1C Portaal Notitieblok" -or $notebook.Name -eq "CHDR - CoCo Notebook") {
+    #if ($notebook.Name -eq "Company X Notebook" ) {
       " "
       $notebook.Name
       $notebookFileName = "$($notebook.Name)" | Remove-InvalidFileNameChars
@@ -34,7 +34,7 @@ if (Test-Path -Path $notesdestpath) {
         }
       }
       foreach ($section in $notebook.Section) {
-        #if ($section.Name -eq "IBN - Aanpassen HR Forms en Workflow") {
+        #if ($section.Name -eq "Adjust Forms and Workflow Section") {
           "--------------"
           "### " + $section.Name
           $sectionFileName = "$($section.Name)" | Remove-InvalidFileNameChars
@@ -43,11 +43,11 @@ if (Test-Path -Path $notesdestpath) {
           [string]$previouspagenamelevel1 = ""
           [string]$previouspagenamelevel2 = ""
           [string]$pageprefix = ""
+          $pageRecurrence = 1
           foreach ($page in $section.Page) {
             "#### " + $page.name
-            #if ($page.name -eq "Documentatie") {
+            #if ($page.name -eq "Workflow Documentation Page") {
               # set page variables
-              $recurrence = 1
               $pagelevel = $page.pagelevel
               $pagelevel = $pagelevel -as [int]
               $pageid = ""
@@ -61,21 +61,10 @@ if (Test-Path -Path $notesdestpath) {
               $fullexportpath = ""
               $fullexportpath = "$($fullexportpathwithoutextension).docx"
 
-              # make sure there is no existing Word file
-              if ([System.IO.File]::Exists($fullexportpath)) {
-                try {
-                  Remove-Item -path $fullexportpath -Force -ErrorAction SilentlyContinue
-                }
-                catch {
-                  Write-Host "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())" -ForegroundColor Red
-                  $totalerr += "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())`r`n"
-                }
-              }
-
               # in case multiple pages with the same name exist in a section, postfix the filename
               if ([System.IO.File]::Exists("$($fullexportpathwithoutextension).md")) {
-                $pagename = "$($pagename)_$recurrence"
-                $recurrence++
+                $pagename = "$($pagename)_$pageRecurrence"
+                $pageRecurrence++
               }
 
               # determine right name prefix based on pagelevel
@@ -116,6 +105,18 @@ if (Test-Path -Path $notesdestpath) {
                 $pagename = "$($pageprefix)_$($pagename)"
               }
               $fullexportpathwithoutextension = "$($fullexportdirpath)\$($pagename)"
+              $fullexportpath = "$($fullexportpathwithoutextension).docx"
+
+              # make sure there is no existing Word file
+              if ([System.IO.File]::Exists($fullexportpath)) {
+                try {
+                  Remove-Item -path $fullexportpath -Force -ErrorAction SilentlyContinue
+                }
+                catch {
+                  Write-Host "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())" -ForegroundColor Red
+                  $totalerr += "Error removing intermediary '$($page.name)' docx file: $($Error[0].ToString())`r`n"
+                }
+              }
 
               # publish OneNote page to Word
               try {

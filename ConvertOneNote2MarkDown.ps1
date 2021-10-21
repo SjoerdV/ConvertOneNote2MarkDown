@@ -57,15 +57,7 @@ if (Test-Path -Path $notesdestpath) {
               $fullexportdirpath = ""
               $fullexportdirpath = "$($notesdestpath)\$($notebookFileName)\$($sectionFileName)"
               $fullexportpathwithoutextension = ""
-              $fullexportpathwithoutextension = "$($fullexportdirpath)\$($pagename)"
               $fullexportpath = ""
-              $fullexportpath = "$($fullexportpathwithoutextension).docx"
-
-              # in case multiple pages with the same name exist in a section, postfix the filename
-              if ([System.IO.File]::Exists("$($fullexportpathwithoutextension).md")) {
-                $pagename = "$($pagename)_$pageRecurrence"
-                $pageRecurrence++
-              }
 
               # determine right name prefix based on pagelevel
               if ($pagelevel -eq 1) {
@@ -104,6 +96,16 @@ if (Test-Path -Path $notesdestpath) {
               if ($pageprefix) {
                 $pagename = "$($pageprefix)_$($pagename)"
               }
+
+              $fullexportpathwithoutextension = "$($fullexportdirpath)\$($pagename)"
+              $fullexportpath = "$($fullexportpathwithoutextension).docx"
+
+              # in case multiple pages with the same name exist in a section, postfix the filename
+              if ([System.IO.File]::Exists("$($fullexportpathwithoutextension).md")) {
+                $pagename = "$($pagename)_$pageRecurrence"
+                $pageRecurrence++
+              }
+
               $fullexportpathwithoutextension = "$($fullexportdirpath)\$($pagename)"
               $fullexportpath = "$($fullexportpathwithoutextension).docx"
 

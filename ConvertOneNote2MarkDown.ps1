@@ -130,7 +130,7 @@ if (Test-Path -Path $notesdestpath) {
               # convert Word to Markdown
               # https://gist.github.com/heardk/ded40b72056cee33abb18f3724e0a580
               try {
-                pandoc.exe -f docx -t gfm -i $fullexportpath -o "$($fullexportpathwithoutextension).md" --wrap=none --atx-headers --extract-media="$($fullexportdirpath)"
+                pandoc.exe -f docx -t gfm -i $fullexportpath -o "$($fullexportpathwithoutextension).md" --wrap=none --markdown-headings=atx --extract-media="$($fullexportdirpath)"
               }
               catch {
                 Write-Host "Error while converting file '$($page.name)' to md: $($Error[0].ToString())" -ForegroundColor Red

@@ -1,6 +1,31 @@
-# This script uses kramdoc to convert MarkDown to AsciiDoc
-# Reference: https://matthewsetter.com/technical-documentation/asciidoc/convert-markdown-to-asciidoc-with-kramdoc/
-# Github: https://github.com/asciidoctor/kramdown-asciidoc
+
+<#
+.SYNOPSIS
+
+Convert Markdown to Asciidoc Tool
+Copyright (C) 2021  Sjoerd de Valk
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 3 as published by
+the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+.DESCRIPTION
+
+This script will convert your already exported Markdown files to Asciidoc files using kramdoc.
+Reference: https://matthewsetter.com/technical-documentation/asciidoc/convert-markdown-to-asciidoc-with-kramdoc/
+Github: https://github.com/asciidoctor/kramdown-asciidoc
+.EXAMPLE
+
+Run this script file as follows: .\ConvertMarkdown2AsciiDoc.ps1
+#>
+
 
 # Request the path to the MarkDown files
 $InputFolder = Read-Host "Enter the base folder containing all MarkDown files (ex. 'c:\Users\me\Notes')"

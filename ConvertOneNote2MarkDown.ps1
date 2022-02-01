@@ -1,3 +1,32 @@
+
+<#
+.SYNOPSIS
+
+Convert OneNote to Markdown Tool
+Copyright (C) 2021  Sjoerd de Valk
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License version 3 as published by
+the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see <https://www.gnu.org/licenses/>.
+.DESCRIPTION
+
+This script will convert your OneNote notebook, sections and pages to Markdown files using the OneNote InterOp API.
+Reference: https://matthewsetter.com/technical-documentation/asciidoc/convert-markdown-to-asciidoc-with-kramdoc/
+Github: https://github.com/asciidoctor/kramdown-asciidoc
+.EXAMPLE
+
+Run this script file as follows: .\ConvertOneNote2MarkDown.ps1
+#>
+
+
 Function Remove-InvalidFileNameChars {
   param(
     [Parameter(Mandatory = $true,

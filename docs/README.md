@@ -48,6 +48,8 @@ The PowerShell script 'ConvertOneNote2MarkDown.ps1' will utilize the OneNote Obj
 
   * I have only tested this on Windows...
 
+* Windows PowerShell 5.1
+
 * Microsoft OneNote >= 2016
 
 * Microsoft Word >= 2016
